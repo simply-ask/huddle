@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1f2937">
+    
+    <title>{% block title %}Huddle - AI Meeting Intelligence{% endblock %}</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{% load static %}{% static 'manifest.json' %}">
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" href="{% load static %}{% static 'icons/icon-192.png' %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{% load static %}{% static 'icons/icon-192.png' %}">
+    
+    <!-- CSS -->
+    <link href="{% load static %}{% static 'css/app.css' %}" rel="stylesheet">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div id="app">
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('{% load static %}{% static 'js/service-worker.js' %}')
+                    .then(function(registration) {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(function(registrationError) {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+    
+    <!-- JavaScript -->
+    <script src="{% load static %}{% static 'js/app.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

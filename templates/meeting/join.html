@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Join Meeting {{ meeting.meeting_id }} - Huddle{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg p-6">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Join Meeting</h1>
+            <p class="text-lg text-gray-600">{{ meeting.meeting_id }}</p>
+            {% if meeting.title %}
+            <p class="text-sm text-gray-500 mt-2">{{ meeting.title }}</p>
+            {% endif %}
+        </div>
+        
+        <div id="join-status" class="mb-6">
+            <div class="flex items-center justify-center p-4 bg-blue-50 rounded-lg">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-3"></div>
+                <span class="text-blue-700">Connecting to meeting...</span>
+            </div>
+        </div>
+        
+        <div id="permission-request" class="hidden mb-6">
+            <div class="text-center">
+                <div class="mb-4">
+                    <svg class="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Microphone Access Required</h3>
+                <p class="text-sm text-gray-600 mb-4">Huddle needs access to your microphone to participate in the meeting.</p>
+                <button id="request-permission-btn" class="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors">
+                    Allow Microphone Access
+                </button>
+            </div>
+        </div>
+        
+        <div id="meeting-controls" class="hidden">
+            <div class="flex justify-center space-x-4 mb-6">
+                <button id="toggle-recording" class="bg-red-500 text-white py-3 px-6 rounded-full hover:bg-red-600 transition-colors">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"></circle>
+                    </svg>
+                    <span class="ml-2">Start Recording</span>
+                </button>
+            </div>
+            
+            <div id="recording-status" class="text-center text-sm text-gray-600 mb-4">
+                <span id="status-text">Ready to record</span>
+            </div>
+            
+            <div id="participants-list" class="border rounded-lg p-4">
+                <h4 class="font-semibold text-gray-900 mb-2">Participants</h4>
+                <div id="participants-container">
+                    <div class="text-sm text-gray-500">Loading...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="error-message" class="hidden p-4 bg-red-50 text-red-700 rounded-lg mb-4">
+            <p id="error-text"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const MEETING_ID = '{{ meeting.meeting_id }}';
+</script>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/audio-capture.js' %}"></script>
+<script src="{% static 'js/websocket-client.js' %}"></script>
+{% endblock %}

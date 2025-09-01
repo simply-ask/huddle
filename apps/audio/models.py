@@ -1,0 +1,49 @@
+from django.db import models
+from apps.core.models import TimeStampedModel
+from apps.meetings.models import Meeting, MeetingParticipant
+
+def huddle_recording_upload_path(instance, filename):
+    """Upload path for Huddle audio recordings"""
+    return f"huddle/recordings/{instance.meeting.meeting_id}/{filename}"
+
+class AudioRecording(TimeStampedModel):
+    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name='recordings')
+    participant = models.ForeignKey(MeetingParticipant, on_delete=models.CASCADE)
+    audio_file = models.FileField(upload_to=huddle_recording_upload_path)
+    duration_seconds = models.PositiveIntegerField(null=True, blank=True)
+    file_size = models.PositiveIntegerField(null=True, blank=True)
+    format = models.CharField(max_length=10)
+    is_processed = models.BooleanField(default=False)
+    processing_started_at = models.DateTimeField(null=True, blank=True)
+    processing_completed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'huddle_audio_recording'
+    
+    def __str__(self):
+        return f"Recording for {self.meeting.meeting_id} by {self.participant.session_id}"
+
+class TranscriptionSegment(TimeStampedModel):
+    recording = models.ForeignKey(AudioRecording, on_delete=models.CASCADE, related_name='segments')
+    start_time = models.FloatField()
+    end_time = models.FloatField()
+    text = models.TextField()
+    confidence = models.FloatField(null=True, blank=True)
+    speaker_id = models.CharField(max_length=50, null=True, blank=True)
+    
+    class Meta:
+        db_table = 'huddle_transcription_segment'
+        ordering = ['start_time']
+
+class MeetingSummary(TimeStampedModel):
+    """AI-generated meeting summary and insights"""
+    meeting = models.OneToOneField(Meeting, on_delete=models.CASCADE, related_name='summary')
+    full_transcript = models.TextField(blank=True)
+    summary = models.TextField(blank=True)
+    key_points = models.JSONField(default=list, help_text="List of key discussion points")
+    action_items = models.JSONField(default=list, help_text="List of action items with assignees")
+    participants_summary = models.JSONField(default=dict, help_text="Speaking time and participation stats")
+    sentiment_analysis = models.JSONField(default=dict, help_text="Overall meeting sentiment")
+    
+    class Meta:
+        db_table = 'huddle_meeting_summary'
