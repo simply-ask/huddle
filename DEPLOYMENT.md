@@ -59,10 +59,31 @@ python manage.py collectstatic --settings=config.settings.production
 
 ### 4. DigitalOcean App Platform
 
-#### Add to existing simplyAsk app or create new app:
+#### Create New App from GitHub:
 
-**Environment Variables** (same as simplyAsk):
+1. **Connect Repository**: `https://github.com/simply-ask/huddle`
+2. **Auto-detect**: App Platform will detect Django app automatically
+3. **Configure Two Services**:
+
+#### Web Service (Django App):
+- **Source**: GitHub repo `simply-ask/huddle`
+- **Branch**: `main`  
+- **Build Command**: `python -m pip install -r requirements.txt && python manage.py collectstatic --noinput --settings=config.settings.production`
+- **Run Command**: `gunicorn --bind 0.0.0.0:8000 --workers 3 --worker-class uvicorn.workers.UvicornWorker config.asgi:application`
+- **Environment**: Production
+- **Instance Type**: Basic ($5/month)
+
+#### Worker Service (Celery):
+- **Source**: Same GitHub repo  
+- **Build Command**: `python -m pip install -r requirements.txt`
+- **Run Command**: `celery -A config worker -l info --settings=config.settings.production`
+- **Environment**: Production
+- **Instance Type**: Basic ($5/month)
+
+#### Environment Variables (both services):
 ```
+SECRET_KEY=[generate-new-secret]
+DEBUG=False
 DB_NAME=defaultdb
 DB_USER=doadmin
 DB_PASSWORD=[your-password]
@@ -70,17 +91,11 @@ DB_HOST=[your-db-host]
 DB_PORT=25060
 DO_SPACES_KEY=[your-key]
 DO_SPACES_SECRET=[your-secret]
-REDIS_URL=redis://[redis-host]:6379/0
-```
-
-**Run Command**:
-```bash
-gunicorn --bind 0.0.0.0:8000 --workers 3 --worker-class uvicorn.workers.UvicornWorker config.asgi:application
-```
-
-**For Celery Worker** (separate component):
-```bash
-celery -A config worker -l info
+AWS_STORAGE_BUCKET_NAME=simplyask
+REDIS_URL=[your-redis-url]
+CELERY_BROKER_URL=[your-redis-url]
+CELERY_RESULT_BACKEND=[your-redis-url]
+OPENAI_API_KEY=[your-openai-key]
 ```
 
 ### 5. Redis Setup (for WebSockets)

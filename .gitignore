@@ -46,6 +46,10 @@ celerybeat.pid
 # Node (if using any JS tools)
 node_modules/
 
+# Docker (removed - using DigitalOcean App Platform)
+# Dockerfile
+# docker-compose.yml
+
 # Backup files
 *.bak
 *.backup
