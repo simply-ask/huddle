@@ -47,14 +47,14 @@ cp .env.example .env
 ./migrate_huddle.sh
 
 # Or manually:
-python manage.py migrate meetings --settings=config.settings.production
-python manage.py migrate audio --settings=config.settings.production
-python manage.py migrate coordination --settings=config.settings.production
+python manage.py migrate meetings
+python manage.py migrate audio
+python manage.py migrate coordination
 ```
 
 ### 3. Static Files
 ```bash
-python manage.py collectstatic --settings=config.settings.production
+python manage.py collectstatic
 ```
 
 ### 4. DigitalOcean App Platform
@@ -68,7 +68,7 @@ python manage.py collectstatic --settings=config.settings.production
 #### Web Service (Django App):
 - **Source**: GitHub repo `simply-ask/huddle`
 - **Branch**: `main`  
-- **Build Command**: `python -m pip install -r requirements.txt && python manage.py collectstatic --noinput --settings=config.settings.production`
+- **Build Command**: `python -m pip install -r requirements.txt && python manage.py collectstatic --noinput`
 - **Run Command**: `gunicorn --bind 0.0.0.0:8000 --workers 3 --worker-class uvicorn.workers.UvicornWorker config.asgi:application`
 - **Environment**: Production
 - **Instance Type**: Basic ($5/month)
@@ -76,7 +76,7 @@ python manage.py collectstatic --settings=config.settings.production
 #### Worker Service (Celery):
 - **Source**: Same GitHub repo  
 - **Build Command**: `python -m pip install -r requirements.txt`
-- **Run Command**: `celery -A config worker -l info --settings=config.settings.production`
+- **Run Command**: `celery -A config worker -l info`
 - **Environment**: Production
 - **Instance Type**: Basic ($5/month)
 

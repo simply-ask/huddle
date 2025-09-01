@@ -9,9 +9,9 @@ echo ""
 
 # Only migrate Huddle apps, skip auth/admin/contenttypes/sessions as they exist
 echo "📦 Migrating Huddle apps..."
-python manage.py migrate meetings --settings=config.settings.development
-python manage.py migrate audio --settings=config.settings.development  
-python manage.py migrate coordination --settings=config.settings.development
+python manage.py migrate meetings
+python manage.py migrate audio
+python manage.py migrate coordination
 
 echo ""
 echo "✅ Huddle migrations complete!"

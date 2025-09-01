@@ -53,9 +53,8 @@ huddle/
 
 ### Prerequisites
 - Python 3.11+
-- PostgreSQL
-- Redis
-- Node.js (for frontend tools)
+- PostgreSQL (or use shared simplyAsk database)
+- Redis (for WebSocket support)
 
 ### Local Development Setup
 
@@ -93,7 +92,7 @@ python manage.py migrate coordination
 
 6. **Start development server**
 ```bash
-python manage.py runserver --settings=config.settings.development
+python manage.py runserver
 ```
 
 7. **Start Celery worker** (in another terminal)
