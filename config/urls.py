@@ -75,11 +75,39 @@ def test_login(request):
     </form>
     """)
 
+def db_test(request):
+    """Test database connection"""
+    try:
+        from django.db import connection
+        from django.contrib.auth.models import User
+        
+        # Test basic connection
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            db_result = cursor.fetchone()
+        
+        # Test user query
+        user_count = User.objects.count()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Database connection successful',
+            'test_query': db_result[0],
+            'user_count': user_count,
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'error_type': type(e).__name__,
+        })
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.api.urls')),
     path('debug/', debug_view, name='debug'),  # Debug endpoint
     path('test-login/', test_login, name='test_login'),  # Test login
+    path('db-test/', db_test, name='db_test'),  # Database test
     path('meet/<str:meeting_id>/', meeting_views.join_meeting, name='join_meeting'),
     path('meet/<str:meeting_id>/room/', meeting_views.meeting_room, name='meeting_room'),
     path('', home_view, name='home'),
