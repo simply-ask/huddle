@@ -18,7 +18,7 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
-SECRET_KEY = 'django-insecure-huddle-dev-key-change-in-production'  # Change this in production
+SECRET_KEY = 'bc_io%$az9sl8z9#3+w5ck2g67fykg5(!l^t%n$35)%+4zg58w'
 DEBUG = True  # Set to False in production
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'huddle.spot', 'seal-app-us4nj.ondigitalocean.app', '.ondigitalocean.app']
 
