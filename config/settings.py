@@ -18,10 +18,9 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-huddle-dev-key-change-in-production')
-DEBUG = config('DEBUG', default=True, cast=bool)  # True for local, False for production
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,0.0.0.0', cast=lambda v: [s.strip() for s in v.split(',')])
-# Add your DigitalOcean app URL to ALLOWED_HOSTS in environment variables
+SECRET_KEY = 'django-insecure-huddle-dev-key-change-in-production'  # Change this in production
+DEBUG = True  # Set to False in production
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'huddle.spot', 'seal-app-us4nj.ondigitalocean.app', '.ondigitalocean.app']
 
 
 # Application definition
