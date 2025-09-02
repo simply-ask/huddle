@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AudioRecording, TranscriptionSegment, AudioQualityMetric, MeetingSummary
+from .models import AudioRecording, TranscriptionSegment, MeetingSummary
 
 @admin.register(AudioRecording)
 class AudioRecordingAdmin(admin.ModelAdmin):
@@ -13,11 +13,6 @@ class TranscriptionSegmentAdmin(admin.ModelAdmin):
     list_display = ['recording', 'start_time', 'end_time', 'speaker_id', 'confidence']
     list_filter = ['confidence', 'recording__created_at']
     search_fields = ['text', 'speaker_id', 'recording__meeting__meeting_id']
-
-@admin.register(AudioQualityMetric)
-class AudioQualityMetricAdmin(admin.ModelAdmin):
-    list_display = ['recording', 'volume_level', 'clarity_score', 'created_at']
-    list_filter = ['created_at']
 
 @admin.register(MeetingSummary)
 class MeetingSummaryAdmin(admin.ModelAdmin):
