@@ -1,0 +1,35 @@
+Voice Setup Required - {{ meeting.title|default:"Meeting" }}
+
+Hi {{ recipient_name }},
+
+{{ host_name }} has invited you to an upcoming meeting and requested that you set up your voice profile for accurate speaker identification during the session.
+
+MEETING DETAILS:
+- Title: {{ meeting.title|default:"Upcoming Meeting" }}
+- Meeting ID: {{ meeting.meeting_id }}
+- Host: {{ host_name }}
+{% if meeting.started_at %}- Scheduled: {{ meeting.started_at|date:"F j, Y at g:i A" }}{% endif %}
+
+COMPLETE VOICE SETUP:
+{{ setup_url }}
+
+WHAT IS VOICE SETUP?
+Voice setup helps our AI accurately identify who's speaking during the meeting. You'll need to:
+1. Record a 10-15 second voice sample using your normal speaking voice
+2. Provide your name and job title
+3. Save your voice profile for future meetings
+
+This takes less than 2 minutes and greatly improves meeting transcription accuracy!
+
+IMPORTANT: This setup link will expire in {{ expires_days }} days for security purposes. Please complete your voice setup soon.
+
+If you have any questions about voice setup or the meeting, please contact {{ host_name }} directly.
+
+Thanks,
+The {{ site_name }} Team
+
+---
+{{ site_name }} - Meeting Intelligence Platform
+
+If the link above doesn't work, copy and paste this URL into your browser:
+{{ setup_url }}

@@ -23,6 +23,7 @@ from django.contrib.auth import authenticate, login
 from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
 from apps.meetings import views as meeting_views
+from apps.meetings import voice_views
 import os
 
 def home_view(request):
@@ -107,6 +108,10 @@ urlpatterns = [
     path('api/', include('apps.api.urls')),
     path('meet/<str:meeting_id>/', meeting_views.join_meeting, name='join_meeting'),
     path('meet/<str:meeting_id>/room/', meeting_views.meeting_room, name='meeting_room'),
+    path('meet/<str:meeting_id>/voice-setup/', voice_views.voice_setup_view, name='voice_setup'),
+    path('meet/<str:meeting_id>/voice-setup-process/', voice_views.process_voice_setup, name='process_voice_setup'),
+    path('meet/<str:meeting_id>/voice-setup-complete/', voice_views.voice_setup_view, name='voice_setup_complete'),
+    path('api/meeting/<str:meeting_id>/speakers/', voice_views.meeting_speaker_status, name='meeting_speaker_status'),
     path('', home_view, name='home'),
 ]
 

@@ -129,11 +129,64 @@
         padding: 10px;
         background: white;
         border-radius: 4px;
+        position: relative;
     }
     .speaker-label {
         font-weight: bold;
         color: #333;
         margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .unknown-speaker {
+        color: #ff6b6b;
+    }
+    .speaker-edit-btn {
+        background: #ffc107;
+        color: #212529;
+        border: none;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+    .speaker-dropdown {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 5px;
+        font-size: 12px;
+        margin-left: 5px;
+    }
+    .speaker-management {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+    .active-speakers {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 15px 0;
+    }
+    .speaker-tag {
+        background: #e9ecef;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    .speaker-tag.active {
+        background: #28a745;
+        color: white;
+    }
+    .speaker-tag.unknown {
+        background: #ffc107;
+        color: #212529;
     }
 </style>
 {% endblock %}
@@ -167,6 +220,24 @@
         </div>
     </div>
 
+    <div class="speaker-management" id="speakerManagement" style="display: none;">
+        <h3>👥 Active Speakers</h3>
+        <p style="color: #666; margin-bottom: 15px;">Manage speaker identification during the meeting</p>
+        
+        <div class="active-speakers" id="activeSpeakers">
+            <!-- Speaker tags will be populated dynamically -->
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <button id="addSpeakerBtn" class="btn" style="background: #28a745; color: white; padding: 8px 16px;">
+                ➕ Add Speaker
+            </button>
+            <button id="refreshSpeakersBtn" class="btn" style="background: #6c757d; color: white; padding: 8px 16px; margin-left: 10px;">
+                🔄 Refresh
+            </button>
+        </div>
+    </div>
+
     <div class="transcript-container" id="transcriptContainer">
         <h3>Live Transcript</h3>
         <div id="transcriptContent">
@@ -191,6 +262,9 @@
     let userRole = null; // 'host' or 'participant'
     let isHost = {{ meeting.host.id|default:'null' }} === {{ user.id|default:'null' }};
     let participantCount = 0;
+    let activeSpeakers = new Map(); // speaker_id -> {name, confidence, last_seen}
+    let knownSpeakers = new Map(); // email -> speaker_profile
+    let transcriptSegments = [];
 
     // Initialize WebSocket connection
     function connectWebSocket() {
@@ -247,6 +321,12 @@
             case 'participant_count':
                 participantCount = data.count;
                 updateParticipantCount();
+                break;
+            case 'speaker_identified':
+                handleSpeakerIdentification(data.speaker);
+                break;
+            case 'speaker_unknown':
+                handleUnknownSpeaker(data.speaker_id, data.transcript);
                 break;
         }
     }
@@ -330,15 +410,197 @@
         const content = document.getElementById('transcriptContent');
         const segment = document.createElement('div');
         segment.className = 'transcript-segment';
+        segment.setAttribute('data-segment-id', transcript.segment_id || Date.now());
+        
+        const speakerClass = transcript.speaker_confidence < 0.5 ? 'unknown-speaker' : '';
+        const editButton = userRole === 'host' && transcript.speaker_confidence < 0.5 ? 
+            '<button class="speaker-edit-btn" onclick="editSpeaker(this)">Edit</button>' : '';
+        
         segment.innerHTML = `
-            <div class="speaker-label">${transcript.speaker || 'Speaker'}</div>
+            <div class="speaker-label ${speakerClass}">
+                ${transcript.speaker || 'Unknown Speaker'}
+                ${editButton}
+            </div>
             <div>${transcript.text}</div>
         `;
+        
         content.appendChild(segment);
+        transcriptSegments.push(transcript);
         
         // Auto-scroll to bottom
         const container = document.getElementById('transcriptContainer');
         container.scrollTop = container.scrollHeight;
+    }
+    
+    // Handle speaker identification
+    function handleSpeakerIdentification(speaker) {
+        activeSpeakers.set(speaker.id, {
+            name: speaker.name,
+            confidence: speaker.confidence,
+            last_seen: Date.now()
+        });
+        updateActiveSpeakers();
+    }
+    
+    // Handle unknown speaker
+    function handleUnknownSpeaker(speakerId, transcript) {
+        if (!activeSpeakers.has(speakerId)) {
+            activeSpeakers.set(speakerId, {
+                name: `Unknown Speaker ${activeSpeakers.size + 1}`,
+                confidence: 0.0,
+                last_seen: Date.now()
+            });
+            updateActiveSpeakers();
+        }
+    }
+    
+    // Update active speakers display
+    function updateActiveSpeakers() {
+        const container = document.getElementById('activeSpeakers');
+        container.innerHTML = '';
+        
+        activeSpeakers.forEach((speaker, speakerId) => {
+            const tag = document.createElement('div');
+            tag.className = `speaker-tag ${speaker.confidence > 0.7 ? 'active' : 'unknown'}`;
+            tag.innerHTML = `
+                <span>${speaker.name}</span>
+                <small>(${Math.round(speaker.confidence * 100)}%)</small>
+                ${userRole === 'host' ? '<button onclick="editSpeakerName(\'' + speakerId + '\')">✏️</button>' : ''}
+            `;
+            container.appendChild(tag);
+        });
+        
+        // Show speaker management section if there are active speakers
+        if (activeSpeakers.size > 0 && userRole === 'host') {
+            document.getElementById('speakerManagement').style.display = 'block';
+        }
+    }
+    
+    // Edit speaker name inline
+    function editSpeaker(button) {
+        if (userRole !== 'host') return;
+        
+        const segment = button.closest('.transcript-segment');
+        const speakerLabel = segment.querySelector('.speaker-label');
+        const currentName = speakerLabel.textContent.replace('Edit', '').trim();
+        
+        // Create dropdown with known speakers + option to add new
+        const dropdown = document.createElement('select');
+        dropdown.className = 'speaker-dropdown';
+        
+        // Add known speakers
+        knownSpeakers.forEach((profile, email) => {
+            const option = document.createElement('option');
+            option.value = profile.name;
+            option.textContent = profile.name;
+            dropdown.appendChild(option);
+        });
+        
+        // Add current active speakers
+        activeSpeakers.forEach((speaker, id) => {
+            const option = document.createElement('option');
+            option.value = speaker.name;
+            option.textContent = speaker.name;
+            dropdown.appendChild(option);
+        });
+        
+        // Add "New Speaker" option
+        const newOption = document.createElement('option');
+        newOption.value = 'NEW';
+        newOption.textContent = '+ New Speaker...';
+        dropdown.appendChild(newOption);
+        
+        dropdown.value = currentName;
+        dropdown.addEventListener('change', function() {
+            if (this.value === 'NEW') {
+                const newName = prompt('Enter speaker name:');
+                if (newName) {
+                    updateSegmentSpeaker(segment, newName);
+                }
+            } else {
+                updateSegmentSpeaker(segment, this.value);
+            }
+            this.remove();
+        });
+        
+        button.replaceWith(dropdown);
+        dropdown.focus();
+    }
+    
+    // Edit speaker name from active speakers
+    function editSpeakerName(speakerId) {
+        if (userRole !== 'host') return;
+        
+        const speaker = activeSpeakers.get(speakerId);
+        const newName = prompt('Enter new name for speaker:', speaker.name);
+        
+        if (newName && newName.trim()) {
+            speaker.name = newName.trim();
+            activeSpeakers.set(speakerId, speaker);
+            updateActiveSpeakers();
+            
+            // Update all transcript segments for this speaker
+            updateTranscriptSpeakerName(speaker.name, newName.trim());
+            
+            // Notify server
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    'type': 'update_speaker_name',
+                    'speaker_id': speakerId,
+                    'new_name': newName.trim(),
+                    'meeting_id': meetingId
+                }));
+            }
+        }
+    }
+    
+    // Update segment speaker
+    function updateSegmentSpeaker(segment, newName) {
+        const speakerLabel = segment.querySelector('.speaker-label');
+        speakerLabel.innerHTML = `${newName} <button class="speaker-edit-btn" onclick="editSpeaker(this)">Edit</button>`;
+        speakerLabel.classList.remove('unknown-speaker');
+        
+        // Notify server about the change
+        const segmentId = segment.getAttribute('data-segment-id');
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({
+                'type': 'update_segment_speaker',
+                'segment_id': segmentId,
+                'speaker_name': newName,
+                'meeting_id': meetingId
+            }));
+        }
+    }
+    
+    // Update transcript speaker name globally
+    function updateTranscriptSpeakerName(oldName, newName) {
+        const segments = document.querySelectorAll('.transcript-segment');
+        segments.forEach(segment => {
+            const speakerLabel = segment.querySelector('.speaker-label');
+            if (speakerLabel.textContent.includes(oldName)) {
+                speakerLabel.innerHTML = speakerLabel.innerHTML.replace(oldName, newName);
+            }
+        });
+    }
+    
+    // Load known speakers
+    async function loadKnownSpeakers() {
+        try {
+            const response = await fetch(`/api/meeting/${meetingId}/speakers/`);
+            if (response.ok) {
+                const data = await response.json();
+                knownSpeakers.clear();
+                data.known_speakers.forEach(speaker => {
+                    knownSpeakers.set(speaker.email, {
+                        name: speaker.name,
+                        email: speaker.email,
+                        job_title: speaker.job_title
+                    });
+                });
+            }
+        } catch (error) {
+            console.error('Error loading known speakers:', error);
+        }
     }
 
     // Update meeting status
@@ -502,6 +764,43 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
         connectWebSocket();
+        loadKnownSpeakers();
+        
+        // Speaker management event listeners
+        document.getElementById('addSpeakerBtn').addEventListener('click', function() {
+            const name = prompt('Enter speaker name:');
+            if (name && name.trim()) {
+                const speakerId = 'manual_' + Date.now();
+                activeSpeakers.set(speakerId, {
+                    name: name.trim(),
+                    confidence: 1.0,
+                    last_seen: Date.now()
+                });
+                updateActiveSpeakers();
+                
+                // Notify server
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                    socket.send(JSON.stringify({
+                        'type': 'add_manual_speaker',
+                        'speaker_id': speakerId,
+                        'speaker_name': name.trim(),
+                        'meeting_id': meetingId
+                    }));
+                }
+            }
+        });
+        
+        document.getElementById('refreshSpeakersBtn').addEventListener('click', function() {
+            loadKnownSpeakers();
+            
+            // Refresh from server
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({
+                    'type': 'refresh_speakers',
+                    'meeting_id': meetingId
+                }));
+            }
+        });
         
         // Request notification permission for meeting alerts
         if ('Notification' in window && Notification.permission === 'default') {

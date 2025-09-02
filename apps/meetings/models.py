@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from apps.core.models import TimeStampedModel
+from apps.core.models import TimeStampedModel, SpeakerProfile
 from apps.core.utils import generate_meeting_id
 
 class Meeting(TimeStampedModel):
@@ -12,11 +12,44 @@ class Meeting(TimeStampedModel):
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
     
+    # Speaker management
+    expected_speakers = models.JSONField(
+        default=list, 
+        help_text="List of expected speaker emails"
+    )
+    known_speakers = models.ManyToManyField(
+        SpeakerProfile, 
+        blank=True, 
+        help_text="Speakers with existing voice profiles"
+    )
+    
     class Meta:
         db_table = 'huddle_meeting'
     
     def __str__(self):
         return f"Meeting {self.meeting_id} - {self.title or 'Untitled'}"
+    
+    def get_new_speakers(self):
+        """Get list of speakers who need voice setup"""
+        known_emails = set(self.known_speakers.values_list('email', flat=True))
+        new_speakers = []
+        
+        for email in self.expected_speakers:
+            if email not in known_emails:
+                new_speakers.append({
+                    'email': email,
+                    'name': self.extract_name_from_email(email),
+                    'needs_setup': True
+                })
+        
+        return new_speakers
+    
+    @staticmethod
+    def extract_name_from_email(email):
+        """Extract likely name from email address"""
+        name_part = email.split('@')[0]
+        # Convert john.smith -> John Smith
+        return ' '.join(word.capitalize() for word in name_part.replace('.', ' ').replace('_', ' ').split())
 
 class MeetingParticipant(TimeStampedModel):
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name='participants')

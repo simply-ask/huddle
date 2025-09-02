@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Voice Setup Complete - {{ meeting.title|default:meeting.meeting_id }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .success-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        text-align: center;
+    }
+    .success-icon {
+        font-size: 80px;
+        color: #28a745;
+        margin-bottom: 20px;
+    }
+    .success-header {
+        color: #28a745;
+        margin-bottom: 30px;
+    }
+    .meeting-info {
+        background: #f9f9f9;
+        padding: 25px;
+        border-radius: 8px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    .speaker-info {
+        background: #e8f5e8;
+        border: 2px solid #28a745;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 20px 0;
+    }
+    .speaker-stats {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+    .stat {
+        text-align: center;
+    }
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #28a745;
+    }
+    .stat-label {
+        font-size: 14px;
+        color: #666;
+    }
+    .action-buttons {
+        margin: 30px 0;
+    }
+    .btn {
+        display: inline-block;
+        padding: 15px 30px;
+        margin: 10px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #0056b3;
+        color: white;
+    }
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+    .btn-secondary:hover {
+        background: #545b62;
+        color: white;
+    }
+    .tips-section {
+        background: #e3f2fd;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 30px 0;
+        text-align: left;
+    }
+    .tips-section h3 {
+        color: #1976d2;
+        margin-top: 0;
+    }
+    .audio-sample {
+        margin: 15px 0;
+        text-align: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="success-icon">✅</div>
+    <h1 class="success-header">Voice Setup Complete!</h1>
+    <p>Your voice profile has been successfully created and saved.</p>
+
+    <div class="meeting-info">
+        <h3>{{ meeting.title|default:"Upcoming Meeting" }}</h3>
+        <p><strong>Meeting ID:</strong> {{ meeting.meeting_id }}</p>
+        <p><strong>Host:</strong> {{ meeting.host.get_full_name|default:meeting.host.username|default:"Host" }}</p>
+        <p><strong>When:</strong> {{ meeting.started_at|default:"To be announced" }}</p>
+    </div>
+
+    <div class="speaker-info">
+        <h3>🎤 Your Voice Profile</h3>
+        <p><strong>Name:</strong> {{ speaker.full_name }}</p>
+        <p><strong>Email:</strong> {{ speaker.email }}</p>
+        {% if speaker.job_title %}
+            <p><strong>Job Title:</strong> {{ speaker.job_title }}</p>
+        {% endif %}
+        
+        {% if speaker.sample_audio %}
+            <div class="audio-sample">
+                <p><strong>Voice Sample:</strong></p>
+                <audio controls style="width: 100%; max-width: 400px;">
+                    <source src="{{ speaker.sample_audio.url }}" type="audio/webm">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="speaker-stats">
+        <div class="stat">
+            <div class="stat-value">{{ speaker.meetings_count }}</div>
+            <div class="stat-label">Meetings Attended</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">{{ speaker.accuracy_score|floatformat:1 }}%</div>
+            <div class="stat-label">Recognition Accuracy</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value">{% if speaker.is_active %}Active{% else %}Inactive{% endif %}</div>
+            <div class="stat-label">Profile Status</div>
+        </div>
+    </div>
+
+    <div class="tips-section">
+        <h3>💡 What's Next?</h3>
+        <ul>
+            <li><strong>Meeting Day:</strong> Join the meeting using the link you received</li>
+            <li><strong>Automatic Recognition:</strong> The system will identify you by your voice</li>
+            <li><strong>Live Transcript:</strong> See real-time transcription with speaker names</li>
+            <li><strong>Meeting Summary:</strong> Receive an AI-generated summary after the meeting</li>
+        </ul>
+        
+        <h4>📅 Before the Meeting</h4>
+        <ul>
+            <li>No additional setup required - you're all set!</li>
+            <li>Test your microphone and audio settings</li>
+            <li>Join from a quiet environment when possible</li>
+        </ul>
+    </div>
+
+    <div class="action-buttons">
+        <a href="/meeting/{{ meeting.meeting_id }}/" class="btn btn-primary">
+            🚪 Go to Meeting Room
+        </a>
+        <a href="/" class="btn btn-secondary">
+            🏠 Return to Dashboard
+        </a>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background: #fff3cd; border-radius: 8px; color: #856404;">
+        <h4>📧 Keep This Information</h4>
+        <p>Save this page or bookmark it for future reference. Your voice profile is now stored securely and will be used for all future meetings with {{ meeting.host.get_full_name|default:"this organization" }}.</p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on primary action button
+    const primaryBtn = document.querySelector('.btn-primary');
+    if (primaryBtn) {
+        primaryBtn.focus();
+    }
+    
+    // Add smooth scroll behavior for any internal links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

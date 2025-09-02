@@ -1,0 +1,398 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Voice Setup - {{ meeting.title|default:meeting.meeting_id }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    .voice-setup {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+    .setup-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    .meeting-info {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+    .form-group {
+        margin-bottom: 25px;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        color: #333;
+    }
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #4CAF50;
+    }
+    .voice-recording {
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        margin: 20px 0;
+    }
+    .voice-recording.recording {
+        border-color: #dc3545;
+        background: #f8d7da;
+    }
+    .record-btn {
+        background: #4CAF50;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-size: 16px;
+        cursor: pointer;
+        margin: 10px;
+        transition: all 0.3s;
+    }
+    .record-btn:hover {
+        background: #45a049;
+    }
+    .record-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    .stop-btn {
+        background: #dc3545;
+    }
+    .stop-btn:hover {
+        background: #c82333;
+    }
+    .submit-btn {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 8px;
+        font-size: 18px;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 20px;
+    }
+    .submit-btn:hover {
+        background: #0056b3;
+    }
+    .submit-btn:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+    }
+    .recording-status {
+        margin-top: 15px;
+        font-weight: bold;
+    }
+    .recording-status.recording {
+        color: #dc3545;
+    }
+    .recording-status.completed {
+        color: #28a745;
+    }
+    .audio-preview {
+        margin-top: 15px;
+    }
+    .instructions {
+        background: #e3f2fd;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+    }
+    .instructions h3 {
+        color: #1976d2;
+        margin-top: 0;
+    }
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="voice-setup">
+    <div class="setup-header">
+        <h1>🎤 Voice Setup</h1>
+        <p>Set up your voice profile for accurate speaker identification</p>
+    </div>
+
+    <div class="meeting-info">
+        <h3>{{ meeting.title|default:"Upcoming Meeting" }}</h3>
+        <p><strong>Meeting ID:</strong> {{ meeting.meeting_id }}</p>
+        <p><strong>Host:</strong> {{ meeting.host.get_full_name|default:meeting.host.username|default:"Host" }}</p>
+        <p><strong>Your Email:</strong> {{ email }}</p>
+    </div>
+
+    <div class="instructions">
+        <h3>📝 Instructions</h3>
+        <ul>
+            <li>Please record a 10-15 second audio sample</li>
+            <li>Speak clearly and naturally - introduce yourself or read the suggested text</li>
+            <li>Ensure you're in a quiet environment</li>
+            <li>This voice profile will be saved for future meetings</li>
+        </ul>
+    </div>
+
+    <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+    <form id="voiceSetupForm" method="post" action="/meet/{{ meeting.meeting_id }}/voice-setup-process/" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="email" value="{{ email }}">
+        <input type="hidden" name="token" value="{{ token }}">
+        
+        <div class="form-group">
+            <label for="full_name">Full Name *</label>
+            <input type="text" id="full_name" name="full_name" class="form-control" 
+                   value="{{ suggested_name }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="job_title">Job Title (Optional)</label>
+            <input type="text" id="job_title" name="job_title" class="form-control" 
+                   placeholder="e.g., Software Engineer, Product Manager">
+        </div>
+
+        <div class="form-group">
+            <label>Voice Sample *</label>
+            <div class="voice-recording" id="recordingArea">
+                <div id="recordingInstructions">
+                    <h4>🎙️ Record Your Voice</h4>
+                    <p>Please say: <em>"Hello, my name is {{ suggested_name }}. I'm joining the meeting and look forward to our discussion."</em></p>
+                    <button type="button" id="startRecordBtn" class="record-btn">
+                        🔴 Start Recording
+                    </button>
+                </div>
+                
+                <div id="recordingActive" style="display: none;">
+                    <h4>🔴 Recording...</h4>
+                    <p>Speak clearly into your microphone</p>
+                    <button type="button" id="stopRecordBtn" class="record-btn stop-btn">
+                        ⏹️ Stop Recording
+                    </button>
+                    <div id="recordingTimer">00:00</div>
+                </div>
+                
+                <div id="recordingComplete" style="display: none;">
+                    <h4>✅ Recording Complete</h4>
+                    <audio id="audioPreview" controls class="audio-preview"></audio>
+                    <br>
+                    <button type="button" id="reRecordBtn" class="record-btn">
+                        🔄 Record Again
+                    </button>
+                </div>
+            </div>
+            <input type="file" id="voice_sample" name="voice_sample" style="display: none;" accept="audio/*">
+        </div>
+
+        <button type="submit" id="submitBtn" class="submit-btn" disabled>
+            🚀 Complete Voice Setup
+        </button>
+    </form>
+</div>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+let recordingTimer;
+let recordingStartTime;
+let isRecording = false;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const startBtn = document.getElementById('startRecordBtn');
+    const stopBtn = document.getElementById('stopRecordBtn');
+    const reRecordBtn = document.getElementById('reRecordBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const form = document.getElementById('voiceSetupForm');
+    const errorDiv = document.getElementById('errorMessage');
+    
+    startBtn.addEventListener('click', startRecording);
+    stopBtn.addEventListener('click', stopRecording);
+    reRecordBtn.addEventListener('click', resetRecording);
+    form.addEventListener('submit', handleSubmit);
+    
+    async function startRecording() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    sampleRate: 44100
+                }
+            });
+            
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'audio/webm;codecs=opus'
+            });
+            
+            audioChunks = [];
+            
+            mediaRecorder.ondataavailable = event => {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+            };
+            
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                
+                const audioPreview = document.getElementById('audioPreview');
+                audioPreview.src = audioUrl;
+                
+                // Convert blob to file for form submission
+                const file = new File([audioBlob], 'voice_sample.webm', { type: 'audio/webm' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                document.getElementById('voice_sample').files = dataTransfer.files;
+                
+                showRecordingComplete();
+                submitBtn.disabled = false;
+            };
+            
+            mediaRecorder.start();
+            isRecording = true;
+            showRecordingActive();
+            startTimer();
+            
+        } catch (error) {
+            console.error('Error accessing microphone:', error);
+            showError('Could not access your microphone. Please check permissions and try again.');
+        }
+    }
+    
+    function stopRecording() {
+        if (mediaRecorder && isRecording) {
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            isRecording = false;
+            stopTimer();
+        }
+    }
+    
+    function resetRecording() {
+        if (isRecording) {
+            stopRecording();
+        }
+        audioChunks = [];
+        document.getElementById('voice_sample').value = '';
+        submitBtn.disabled = true;
+        showRecordingInstructions();
+    }
+    
+    function showRecordingInstructions() {
+        document.getElementById('recordingInstructions').style.display = 'block';
+        document.getElementById('recordingActive').style.display = 'none';
+        document.getElementById('recordingComplete').style.display = 'none';
+        document.getElementById('recordingArea').classList.remove('recording');
+    }
+    
+    function showRecordingActive() {
+        document.getElementById('recordingInstructions').style.display = 'none';
+        document.getElementById('recordingActive').style.display = 'block';
+        document.getElementById('recordingComplete').style.display = 'none';
+        document.getElementById('recordingArea').classList.add('recording');
+    }
+    
+    function showRecordingComplete() {
+        document.getElementById('recordingInstructions').style.display = 'none';
+        document.getElementById('recordingActive').style.display = 'none';
+        document.getElementById('recordingComplete').style.display = 'block';
+        document.getElementById('recordingArea').classList.remove('recording');
+    }
+    
+    function startTimer() {
+        recordingStartTime = Date.now();
+        recordingTimer = setInterval(updateTimer, 1000);
+    }
+    
+    function stopTimer() {
+        if (recordingTimer) {
+            clearInterval(recordingTimer);
+        }
+    }
+    
+    function updateTimer() {
+        const elapsed = Math.floor((Date.now() - recordingStartTime) / 1000);
+        const minutes = Math.floor(elapsed / 60);
+        const seconds = elapsed % 60;
+        document.getElementById('recordingTimer').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+    
+    function showError(message) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
+    }
+    
+    async function handleSubmit(e) {
+        e.preventDefault();
+        
+        const fullName = document.getElementById('full_name').value.trim();
+        const voiceFile = document.getElementById('voice_sample').files[0];
+        
+        if (!fullName) {
+            showError('Please enter your full name.');
+            return;
+        }
+        
+        if (!voiceFile) {
+            showError('Please record a voice sample.');
+            return;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Setting up your profile...';
+        
+        try {
+            const formData = new FormData(form);
+            const response = await fetch(form.action || window.location.pathname, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok && result.success) {
+                // Redirect to success page
+                window.location.href = window.location.pathname.replace('/voice-setup/', '/voice-setup-complete/') + window.location.search;
+            } else {
+                showError(result.error || 'An error occurred. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Complete Voice Setup';
+            }
+            
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            showError('Network error. Please check your connection and try again.');
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🚀 Complete Voice Setup';
+        }
+    }
+});
+</script>
+{% endblock %}
