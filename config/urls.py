@@ -19,6 +19,9 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import HttpResponse, JsonResponse
+from django.contrib.auth import authenticate, login
+from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
 from apps.meetings import views as meeting_views
 import os
 
@@ -33,20 +36,50 @@ def home_view(request):
 
 def debug_view(request):
     """Debug endpoint to check configuration"""
+    from django.conf import settings
     return JsonResponse({
-        'debug': os.environ.get('DEBUG', 'not set'),
-        'allowed_hosts': os.environ.get('ALLOWED_HOSTS', 'not set'),
+        'debug': settings.DEBUG,
+        'allowed_hosts': settings.ALLOWED_HOSTS,
         'db_host': 'configured' if os.environ.get('DB_HOST') else 'not configured',
         'db_name': 'configured' if os.environ.get('DB_NAME') else 'not configured',
-        'static_url': '/static/',
-        'csrf_cookie_secure': True,
-        'session_cookie_secure': True,
+        'static_url': settings.STATIC_URL,
+        'csrf_cookie_secure': settings.CSRF_COOKIE_SECURE,
+        'session_cookie_secure': settings.SESSION_COOKIE_SECURE,
+        'request_is_secure': request.is_secure(),
+        'host': request.get_host(),
+        'scheme': request.scheme,
+        'meta_http_host': request.META.get('HTTP_HOST'),
+        'meta_server_name': request.META.get('SERVER_NAME'),
+        'meta_forwarded_proto': request.META.get('HTTP_X_FORWARDED_PROTO'),
     })
+
+@csrf_exempt  
+def test_login(request):
+    """Test login without CSRF to debug the issue"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return JsonResponse({'success': True, 'message': 'Login successful'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Invalid credentials'})
+    
+    return HttpResponse("""
+    <h2>Test Login (No CSRF)</h2>
+    <form method="post">
+        <p>Username: <input type="text" name="username"></p>
+        <p>Password: <input type="password" name="password"></p>
+        <input type="submit" value="Login">
+    </form>
+    """)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.api.urls')),
     path('debug/', debug_view, name='debug'),  # Debug endpoint
+    path('test-login/', test_login, name='test_login'),  # Test login
     path('meet/<str:meeting_id>/', meeting_views.join_meeting, name='join_meeting'),
     path('meet/<str:meeting_id>/room/', meeting_views.meeting_room, name='meeting_room'),
     path('', home_view, name='home'),
