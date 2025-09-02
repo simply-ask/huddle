@@ -11,7 +11,7 @@ Transform any meeting into actionable insights with zero friction. Just tap a li
 - **Intelligent coordination**: Algorithms determine optimal recording device based on proximity and quality
 
 ### AI-Powered Processing
-- **High-accuracy transcription**: Using OpenAI Whisper for speech-to-text
+- **High-accuracy transcription**: Using OpenAI Whisper API for speech-to-text
 - **Speaker diarization**: Identify who said what
 - **Meeting summaries**: Automatic generation of key points and action items
 - **RAG-powered insights**: Extract actionable intelligence from meetings
@@ -30,7 +30,7 @@ Transform any meeting into actionable insights with zero friction. Just tap a li
 - **Task Queue**: Celery with Redis backend
 - **Database**: PostgreSQL (shared with simplyAsk)
 - **Storage**: DigitalOcean Spaces
-- **AI/ML**: OpenAI Whisper, Custom coordination algorithms
+- **AI/ML**: OpenAI Whisper API, Custom coordination algorithms
 - **Deployment**: DigitalOcean App Platform
 
 ### Project Structure
@@ -39,7 +39,7 @@ huddle/
 ├── apps/
 │   ├── core/           # Shared utilities
 │   ├── meetings/       # Meeting management & WebSocket
-│   ├── audio/          # Audio processing & Whisper
+│   ├── audio/          # Audio processing & OpenAI API
 │   ├── coordination/   # Multi-phone algorithms
 │   └── api/            # REST API endpoints
 ├── config/             # Django settings
@@ -201,7 +201,7 @@ For issues or questions:
 
 ## 🙏 Acknowledgments
 
-- OpenAI Whisper for transcription
+- OpenAI Whisper API for transcription
 - Django Channels for WebSocket support
 - DigitalOcean for infrastructure
 - The simplyAsk team for integration support

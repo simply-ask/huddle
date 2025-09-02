@@ -1,28 +1,19 @@
 from celery import shared_task
 from .models import AudioRecording
+from .processors import AudioProcessor
 
 @shared_task
 def process_audio_recording(recording_id):
-    """Background task to process audio recording with Whisper API"""
+    """Background task to process audio recording with OpenAI Whisper API"""
     try:
-        # Try API processor first (lightweight)
-        try:
-            from .processors_api import OpenAIProcessor
-            processor = OpenAIProcessor()
-        except ImportError:
-            # Fall back to local processor if available
-            try:
-                from .processors import WhisperProcessor
-                processor = WhisperProcessor()
-            except ImportError:
-                print(f"No audio processor available for recording {recording_id}")
-                return False
-        
         recording = AudioRecording.objects.get(id=recording_id)
+        
+        # Process with OpenAI API
+        processor = AudioProcessor()
         success = processor.transcribe_audio(recording)
         
         if success:
-            print(f"Successfully processed recording {recording_id}")
+            print(f"Successfully processed recording {recording_id} via OpenAI API")
         else:
             print(f"Failed to process recording {recording_id}")
             
@@ -30,4 +21,10 @@ def process_audio_recording(recording_id):
         
     except AudioRecording.DoesNotExist:
         print(f"Recording {recording_id} not found")
+        return False
+    except ValueError as e:
+        print(f"Configuration error: {e}")
+        return False
+    except Exception as e:
+        print(f"Unexpected error processing recording {recording_id}: {e}")
         return False

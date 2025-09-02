@@ -1,38 +1,52 @@
-import tempfile
-import os
+"""
+Audio processing using OpenAI Whisper API
+"""
 from .models import AudioRecording, TranscriptionSegment
+from decouple import config
+from openai import OpenAI
 
-try:
-    import whisper
-    from pydub import AudioSegment
-    AUDIO_PROCESSING_AVAILABLE = True
-except ImportError:
-    # For development/migration purposes when these packages aren't installed
-    AUDIO_PROCESSING_AVAILABLE = False
-
-class WhisperProcessor:
-    def __init__(self, model_name='base'):
-        if not AUDIO_PROCESSING_AVAILABLE:
-            raise ImportError("Audio processing packages not available")
-        self.model = whisper.load_model(model_name)
+class AudioProcessor:
+    """Process audio using OpenAI's Whisper API"""
+    
+    def __init__(self):
+        api_key = config('OPENAI_API_KEY', default='')
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not configured in environment variables")
+            
+        self.client = OpenAI(api_key=api_key)
     
     def transcribe_audio(self, audio_recording):
-        """Transcribe audio using Whisper and save segments"""
+        """Transcribe audio using OpenAI Whisper API"""
         try:
-            # Convert audio to format suitable for Whisper
+            # Open the audio file
             audio_file_path = audio_recording.audio_file.path
             
-            # Load and process audio
-            result = self.model.transcribe(audio_file_path, word_timestamps=True)
+            with open(audio_file_path, 'rb') as audio_file:
+                # Call OpenAI Whisper API
+                response = self.client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    response_format="verbose_json",
+                    timestamp_granularities=["segment"]
+                )
             
-            # Create transcription segments
-            for segment in result['segments']:
+            # Process segments if available
+            if hasattr(response, 'segments'):
+                for segment in response.segments:
+                    TranscriptionSegment.objects.create(
+                        recording=audio_recording,
+                        start_time=segment.get('start', 0),
+                        end_time=segment.get('end', 0),
+                        text=segment.get('text', ''),
+                        confidence=None  # API doesn't provide confidence scores
+                    )
+            else:
+                # If no segments, create one segment with full text
                 TranscriptionSegment.objects.create(
                     recording=audio_recording,
-                    start_time=segment['start'],
-                    end_time=segment['end'],
-                    text=segment['text'],
-                    confidence=segment.get('avg_logprob')
+                    start_time=0,
+                    end_time=audio_recording.duration_seconds or 0,
+                    text=response.text
                 )
             
             audio_recording.is_processed = True
@@ -41,22 +55,5 @@ class WhisperProcessor:
             return True
             
         except Exception as e:
-            print(f"Error transcribing audio: {str(e)}")
+            print(f"Error transcribing audio via API: {str(e)}")
             return False
-    
-    def merge_audio_files(self, recordings):
-        """Merge multiple audio recordings from same meeting"""
-        if not recordings:
-            return None
-        
-        combined = AudioSegment.empty()
-        
-        for recording in recordings:
-            try:
-                audio = AudioSegment.from_file(recording.audio_file.path)
-                combined += audio
-            except Exception as e:
-                print(f"Error merging audio file {recording.id}: {str(e)}")
-                continue
-        
-        return combined
