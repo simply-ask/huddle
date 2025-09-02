@@ -1,14 +1,24 @@
 from celery import shared_task
 from .models import AudioRecording
-from .processors import WhisperProcessor
 
 @shared_task
 def process_audio_recording(recording_id):
-    """Background task to process audio recording with Whisper"""
+    """Background task to process audio recording with Whisper API"""
     try:
-        recording = AudioRecording.objects.get(id=recording_id)
-        processor = WhisperProcessor()
+        # Try API processor first (lightweight)
+        try:
+            from .processors_api import OpenAIProcessor
+            processor = OpenAIProcessor()
+        except ImportError:
+            # Fall back to local processor if available
+            try:
+                from .processors import WhisperProcessor
+                processor = WhisperProcessor()
+            except ImportError:
+                print(f"No audio processor available for recording {recording_id}")
+                return False
         
+        recording = AudioRecording.objects.get(id=recording_id)
         success = processor.transcribe_audio(recording)
         
         if success:

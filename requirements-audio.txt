@@ -1,0 +1,10 @@
+# Audio Processing Requirements (Optional)
+# Install these separately for audio transcription features
+# Note: These are too large for DigitalOcean App Platform basic instances
+
+openai-whisper>=20231117
+pydub>=0.25.0
+librosa>=0.10.0
+
+# Alternative: Use OpenAI API for transcription instead
+# openai>=1.0.0

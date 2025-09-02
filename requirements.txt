@@ -14,10 +14,8 @@ redis>=4.5.0
 # Database
 psycopg2-binary>=2.9.0
 
-# Audio Processing
-openai-whisper>=20231117
-pydub>=0.25.0
-librosa>=0.10.0
+# Audio Processing - Using OpenAI API instead of local Whisper
+openai>=1.0.0  # For API-based transcription (lightweight)
 
 # Environment Management
 python-decouple>=3.8
