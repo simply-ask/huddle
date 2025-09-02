@@ -18,8 +18,9 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from apps.meetings import views as meeting_views
+import os
 
 def home_view(request):
     return HttpResponse("""
@@ -30,9 +31,22 @@ def home_view(request):
     <p>Admin panel: /admin/</p>
     """)
 
+def debug_view(request):
+    """Debug endpoint to check configuration"""
+    return JsonResponse({
+        'debug': os.environ.get('DEBUG', 'not set'),
+        'allowed_hosts': os.environ.get('ALLOWED_HOSTS', 'not set'),
+        'db_host': 'configured' if os.environ.get('DB_HOST') else 'not configured',
+        'db_name': 'configured' if os.environ.get('DB_NAME') else 'not configured',
+        'static_url': '/static/',
+        'csrf_cookie_secure': True,
+        'session_cookie_secure': True,
+    })
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.api.urls')),
+    path('debug/', debug_view, name='debug'),  # Debug endpoint
     path('meet/<str:meeting_id>/', meeting_views.join_meeting, name='join_meeting'),
     path('meet/<str:meeting_id>/room/', meeting_views.meeting_room, name='meeting_room'),
     path('', home_view, name='home'),
