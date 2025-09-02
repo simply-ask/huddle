@@ -10,28 +10,50 @@
         margin: 0 auto;
         padding: 20px;
     }
-    .participants-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 20px;
+    .participants-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin: 20px 0;
-    }
-    .participant-card {
-        background: #f5f5f5;
+        padding: 20px;
+        background: #f9f9f9;
         border-radius: 8px;
-        padding: 15px;
-        text-align: center;
     }
-    .participant-status {
-        display: inline-block;
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        margin-right: 5px;
+    .host-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-    .status-active { background: #4CAF50; }
-    .status-recording { background: #FF5722; }
-    .status-idle { background: #FFC107; }
+    .host-badge {
+        background: #4CAF50;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .recording-phone {
+        font-size: 24px;
+        margin-right: 10px;
+    }
+    .participants-count {
+        font-size: 14px;
+        color: #666;
+    }
+    .role-indicator {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        margin-left: 10px;
+    }
+    .role-host {
+        background: #4CAF50;
+        color: white;
+    }
+    .role-participant {
+        background: #2196F3;
+        color: white;
+    }
     .controls {
         position: fixed;
         bottom: 0;
@@ -123,14 +145,25 @@
         <span>Recording</span>
     </div>
 
-    <h1>{{ meeting.title|default:"Meeting" }}</h1>
-    <p>Meeting ID: <strong>{{ meeting.meeting_id }}</strong></p>
-    <p>Status: <span id="meetingStatus">{{ meeting.status }}</span></p>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div>
+            <h1>{{ meeting.title|default:"Meeting" }}</h1>
+            <p>Meeting ID: <strong>{{ meeting.meeting_id }}</strong></p>
+        </div>
+        <div id="userRole" class="role-indicator"></div>
+    </div>
 
     <div class="participants-section">
-        <h2>Participants</h2>
-        <div class="participants-grid" id="participantsGrid">
-            <!-- Participants will be added dynamically -->
+        <div class="host-info">
+            <span class="recording-phone">📱</span>
+            <div>
+                <div><strong id="hostName">{{ meeting.host.get_full_name|default:meeting.host.username|default:"Host" }}</strong> 
+                <span class="host-badge">HOST</span></div>
+                <div class="participants-count">Recording Phone</div>
+            </div>
+        </div>
+        <div>
+            <span id="participantCount">0</span> participant(s) viewing
         </div>
     </div>
 
@@ -141,16 +174,8 @@
         </div>
     </div>
 
-    <div class="controls">
-        <button id="startRecordingBtn" class="btn btn-record">
-            Start Recording
-        </button>
-        <button id="stopRecordingBtn" class="btn btn-stop" style="display: none;">
-            Stop Recording
-        </button>
-        <button id="leaveMeetingBtn" class="btn btn-leave">
-            Leave Meeting
-        </button>
+    <div class="controls" id="controlsSection">
+        <!-- Controls will be added dynamically based on user role -->
     </div>
 </div>
 
@@ -163,6 +188,9 @@
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
+    let userRole = null; // 'host' or 'participant'
+    let isHost = {{ meeting.host.id|default:'null' }} === {{ user.id|default:'null' }};
+    let participantCount = 0;
 
     // Initialize WebSocket connection
     function connectWebSocket() {
@@ -170,9 +198,13 @@
         
         socket.onopen = function(e) {
             console.log('WebSocket connected');
+            userRole = isHost ? 'host' : 'participant';
+            updateUI();
+            
             socket.send(JSON.stringify({
                 'type': 'join',
                 'meeting_id': meetingId,
+                'role': userRole,
                 'device_type': detectDeviceType()
             }));
         };
@@ -196,63 +228,101 @@
     function handleWebSocketMessage(data) {
         switch(data.type) {
             case 'participant_joined':
-                addParticipant(data.participant);
+                participantCount++;
+                updateParticipantCount();
                 break;
             case 'participant_left':
-                removeParticipant(data.participant_id);
+                participantCount = Math.max(0, participantCount - 1);
+                updateParticipantCount();
                 break;
             case 'recording_started':
-                updateRecordingStatus(true, data.participant_id);
+                updateRecordingStatus(true);
                 break;
             case 'recording_stopped':
-                updateRecordingStatus(false, data.participant_id);
+                updateRecordingStatus(false);
                 break;
             case 'transcript_update':
                 updateTranscript(data.transcript);
                 break;
-            case 'meeting_status':
-                updateMeetingStatus(data.status);
+            case 'participant_count':
+                participantCount = data.count;
+                updateParticipantCount();
                 break;
         }
     }
 
-    // Add participant to the grid
-    function addParticipant(participant) {
-        const grid = document.getElementById('participantsGrid');
-        const card = document.createElement('div');
-        card.className = 'participant-card';
-        card.id = `participant-${participant.id}`;
-        card.innerHTML = `
-            <span class="participant-status status-idle"></span>
-            <h4>${participant.name || 'Anonymous'}</h4>
-            <p>${participant.device_type}</p>
-        `;
-        grid.appendChild(card);
+    // Update UI based on user role
+    function updateUI() {
+        const roleElement = document.getElementById('userRole');
+        const controlsSection = document.getElementById('controlsSection');
+        
+        if (userRole === 'host') {
+            roleElement.textContent = 'HOST';
+            roleElement.className = 'role-indicator role-host';
+            
+            // Add host controls
+            controlsSection.innerHTML = `
+                <button id="startRecordingBtn" class="btn btn-record">
+                    📱 Start Recording
+                </button>
+                <button id="stopRecordingBtn" class="btn btn-stop" style="display: none;">
+                    ⏹️ Stop Recording
+                </button>
+                <button id="leaveMeetingBtn" class="btn btn-leave">
+                    🚪 End Meeting
+                </button>
+            `;
+            
+            // Add event listeners for host controls
+            document.getElementById('startRecordingBtn').addEventListener('click', startRecording);
+            document.getElementById('stopRecordingBtn').addEventListener('click', stopRecording);
+            document.getElementById('leaveMeetingBtn').addEventListener('click', endMeeting);
+            
+        } else {
+            roleElement.textContent = 'PARTICIPANT';
+            roleElement.className = 'role-indicator role-participant';
+            
+            // Add participant controls (view-only)
+            controlsSection.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <p style="color: #666; margin-bottom: 10px;">
+                        👁️ You're viewing this meeting
+                    </p>
+                    <p style="font-size: 14px; color: #999;">
+                        Only the host can control recording
+                    </p>
+                    <button id="leaveMeetingBtn" class="btn btn-leave">
+                        🚪 Leave Meeting
+                    </button>
+                </div>
+            `;
+            
+            document.getElementById('leaveMeetingBtn').addEventListener('click', leaveMeeting);
+        }
     }
 
-    // Remove participant from the grid
-    function removeParticipant(participantId) {
-        const card = document.getElementById(`participant-${participantId}`);
-        if (card) {
-            card.remove();
-        }
+    // Update participant count display
+    function updateParticipantCount() {
+        document.getElementById('participantCount').textContent = participantCount;
     }
 
     // Update recording status
-    function updateRecordingStatus(isRecording, participantId) {
+    function updateRecordingStatus(recordingActive) {
         const indicator = document.getElementById('recordingIndicator');
-        if (isRecording) {
+        if (recordingActive) {
             indicator.classList.add('active');
+            if (userRole === 'host') {
+                document.getElementById('startRecordingBtn').style.display = 'none';
+                document.getElementById('stopRecordingBtn').style.display = 'inline-block';
+            }
         } else {
             indicator.classList.remove('active');
+            if (userRole === 'host') {
+                document.getElementById('startRecordingBtn').style.display = 'inline-block';
+                document.getElementById('stopRecordingBtn').style.display = 'none';
+            }
         }
-        
-        // Update participant status
-        const card = document.getElementById(`participant-${participantId}`);
-        if (card) {
-            const status = card.querySelector('.participant-status');
-            status.className = `participant-status ${isRecording ? 'status-recording' : 'status-idle'}`;
-        }
+        isRecording = recordingActive;
     }
 
     // Update transcript
@@ -287,8 +357,13 @@
         return 'desktop';
     }
 
-    // Start recording
+    // Start recording (host only)
     async function startRecording() {
+        if (userRole !== 'host') {
+            alert('Only the host can control recording.');
+            return;
+        }
+        
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
@@ -306,38 +381,33 @@
             };
             
             mediaRecorder.start();
-            isRecording = true;
+            updateRecordingStatus(true);
             
-            // Update UI
-            document.getElementById('startRecordingBtn').style.display = 'none';
-            document.getElementById('stopRecordingBtn').style.display = 'inline-block';
-            document.getElementById('recordingIndicator').classList.add('active');
-            
-            // Notify server
+            // Notify all participants via WebSocket
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({
                     'type': 'recording_started',
-                    'meeting_id': meetingId
+                    'meeting_id': meetingId,
+                    'host_recording': true
                 }));
             }
         } catch (error) {
             console.error('Error starting recording:', error);
-            alert('Could not access microphone. Please check permissions.');
+            alert('Could not access microphone. Please check permissions and ensure you\'re using HTTPS.');
         }
     }
 
-    // Stop recording
+    // Stop recording (host only)
     function stopRecording() {
+        if (userRole !== 'host') {
+            return;
+        }
+        
         if (mediaRecorder && isRecording) {
             mediaRecorder.stop();
-            isRecording = false;
+            updateRecordingStatus(false);
             
-            // Update UI
-            document.getElementById('startRecordingBtn').style.display = 'inline-block';
-            document.getElementById('stopRecordingBtn').style.display = 'none';
-            document.getElementById('recordingIndicator').classList.remove('active');
-            
-            // Notify server
+            // Notify all participants via WebSocket
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({
                     'type': 'recording_stopped',
@@ -391,12 +461,31 @@
         return cookieValue;
     }
 
-    // Leave meeting
-    function leaveMeeting() {
-        if (isRecording) {
-            stopRecording();
+    // End meeting (host only)
+    function endMeeting() {
+        if (userRole !== 'host') {
+            return;
         }
         
+        if (confirm('Are you sure you want to end the meeting for everyone?')) {
+            if (isRecording) {
+                stopRecording();
+            }
+            
+            if (socket) {
+                socket.send(JSON.stringify({
+                    'type': 'meeting_ended',
+                    'meeting_id': meetingId
+                }));
+                socket.close();
+            }
+            
+            window.location.href = '/';
+        }
+    }
+
+    // Leave meeting (participant)
+    function leaveMeeting() {
         if (socket) {
             socket.send(JSON.stringify({
                 'type': 'leave',
@@ -408,10 +497,7 @@
         window.location.href = '/';
     }
 
-    // Event listeners
-    document.getElementById('startRecordingBtn').addEventListener('click', startRecording);
-    document.getElementById('stopRecordingBtn').addEventListener('click', stopRecording);
-    document.getElementById('leaveMeetingBtn').addEventListener('click', leaveMeeting);
+    // Event listeners are now added dynamically in updateUI() function
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
