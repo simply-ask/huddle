@@ -18,15 +18,18 @@ echo "✅ Huddle migrations complete!"
 echo ""
 echo "Verifying Huddle tables..."
 python -c "
-from decouple import config
+import os
 import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
 
 conn = psycopg2.connect(
-    dbname=config('DB_NAME'),
-    user=config('DB_USER'), 
-    password=config('DB_PASSWORD'),
-    host=config('DB_HOST'),
-    port=config('DB_PORT'),
+    dbname=os.environ.get('DB_NAME'),
+    user=os.environ.get('DB_USER'), 
+    password=os.environ.get('DB_PASSWORD'),
+    host=os.environ.get('DB_HOST'),
+    port=os.environ.get('DB_PORT'),
     sslmode='require'
 )
 cur = conn.cursor()

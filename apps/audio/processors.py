@@ -1,15 +1,15 @@
 """
 Audio processing using OpenAI Whisper API
 """
+import os
 from .models import AudioRecording, TranscriptionSegment
-from decouple import config
 from openai import OpenAI
 
 class AudioProcessor:
     """Process audio using OpenAI's Whisper API"""
     
     def __init__(self):
-        api_key = config('OPENAI_API_KEY', default='')
+        api_key = os.environ.get('OPENAI_API_KEY', '')
         if not api_key:
             raise ValueError("OPENAI_API_KEY not configured in environment variables")
             
