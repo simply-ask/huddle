@@ -105,9 +105,6 @@ def db_test(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.api.urls')),
-    path('debug/', debug_view, name='debug'),  # Debug endpoint
-    path('test-login/', test_login, name='test_login'),  # Test login
-    path('db-test/', db_test, name='db_test'),  # Database test
     path('meet/<str:meeting_id>/', meeting_views.join_meeting, name='join_meeting'),
     path('meet/<str:meeting_id>/room/', meeting_views.meeting_room, name='meeting_room'),
     path('', home_view, name='home'),
