@@ -26,6 +26,7 @@ from apps.meetings import views as meeting_views
 from apps.meetings import voice_views
 from apps.meetings import auth_views
 from apps.meetings import management_views
+from apps.meetings import debug_views
 import os
 
 def home_view(request):
@@ -135,6 +136,11 @@ urlpatterns = [
     path('meet/<str:meeting_id>/voice-setup-process/', voice_views.process_voice_setup, name='process_voice_setup'),
     path('meet/<str:meeting_id>/voice-setup-complete/', voice_views.voice_setup_view, name='voice_setup_complete'),
     path('api/meeting/<str:meeting_id>/speakers/', voice_views.meeting_speaker_status, name='meeting_speaker_status'),
+    
+    # Debug Endpoints (Staff Only)
+    path('debug/email-config/', debug_views.email_debug_info, name='email_debug_info'),
+    path('debug/test-email/', debug_views.test_email_send, name='test_email_send'),
+    path('debug/email-test/', debug_views.email_test_page, name='email_test_page'),
     
     # Root redirects to dashboard
     path('', lambda request: redirect('dashboard' if request.user.is_authenticated else 'login'), name='home'),

@@ -6,9 +6,47 @@ from django.utils import timezone
 from apps.meetings.voice_views import generate_setup_token
 from .models import Meeting
 import ssl
+import logging
+import traceback
+import os
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+def debug_email_config():
+    """Log email configuration for debugging"""
+    logger.info("=== EMAIL CONFIGURATION DEBUG ===")
+    logger.info(f"EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
+    logger.info(f"EMAIL_HOST: {getattr(settings, 'EMAIL_HOST', 'Not set')}")
+    logger.info(f"EMAIL_PORT: {getattr(settings, 'EMAIL_PORT', 'Not set')}")
+    logger.info(f"EMAIL_USE_SSL: {getattr(settings, 'EMAIL_USE_SSL', 'Not set')}")
+    logger.info(f"EMAIL_USE_TLS: {getattr(settings, 'EMAIL_USE_TLS', 'Not set')}")
+    logger.info(f"EMAIL_HOST_USER: {getattr(settings, 'EMAIL_HOST_USER', 'Not set')}")
+    logger.info(f"DEFAULT_FROM_EMAIL: {getattr(settings, 'DEFAULT_FROM_EMAIL', 'Not set')}")
+    logger.info(f"DO_EMAIL_PASSWORD set: {'Yes' if os.getenv('DO_EMAIL_PASSWORD') else 'No'}")
+    logger.info(f"SITE_URL: {getattr(settings, 'SITE_URL', 'Not set')}")
+    logger.info("=== END EMAIL CONFIG DEBUG ===")
+    
+    # Also print to console for immediate visibility
+    print("📧 EMAIL DEBUG INFO:")
+    print(f"   Backend: {settings.EMAIL_BACKEND}")
+    print(f"   Host: {getattr(settings, 'EMAIL_HOST', 'Not set')}")
+    print(f"   From: {getattr(settings, 'DEFAULT_FROM_EMAIL', 'Not set')}")
+    print(f"   Password set: {'Yes' if os.getenv('DO_EMAIL_PASSWORD') else 'No'}")
 
 def send_voice_setup_invitation(meeting, email, host_name=None):
     """Send voice setup invitation email to a participant"""
+    # Debug email configuration first
+    debug_email_config()
+    
+    logger.info(f"=== SENDING VOICE SETUP INVITATION ===")
+    logger.info(f"Meeting: {meeting.meeting_id} - {meeting.title}")
+    logger.info(f"Recipient: {email}")
+    logger.info(f"Host: {host_name}")
+    
+    print(f"🚀 SENDING EMAIL TO: {email}")
+    print(f"   Meeting: {meeting.meeting_id} - {meeting.title}")
+    
     try:
         # Generate secure token
         token = generate_setup_token(meeting.meeting_id, email)
@@ -32,7 +70,24 @@ def send_voice_setup_invitation(meeting, email, host_name=None):
         html_message = render_to_string('emails/voice_setup_invitation.html', context)
         text_message = render_to_string('emails/voice_setup_invitation.txt', context)
         
-        # Send email
+        # Log email details before sending
+        logger.info(f"Email subject: {subject}")
+        logger.info(f"From email: {settings.DEFAULT_FROM_EMAIL}")
+        logger.info(f"To email: {email}")
+        logger.info(f"Setup URL: {setup_url}")
+        logger.info(f"Text message length: {len(text_message)} chars")
+        logger.info(f"HTML message length: {len(html_message)} chars")
+        
+        print(f"📧 EMAIL DETAILS:")
+        print(f"   Subject: {subject}")
+        print(f"   From: {settings.DEFAULT_FROM_EMAIL}")
+        print(f"   To: {email}")
+        print(f"   Setup URL: {setup_url}")
+        
+        # Send email with detailed error handling
+        print("📤 Attempting to send email...")
+        logger.info("Attempting to send email via Django send_mail...")
+        
         send_mail(
             subject=subject,
             message=text_message,
@@ -42,10 +97,22 @@ def send_voice_setup_invitation(meeting, email, host_name=None):
             fail_silently=False
         )
         
+        logger.info("✅ Email sent successfully via Django send_mail")
+        print("✅ Email sent successfully!")
+        
         return True, f"Voice setup invitation sent to {email}"
         
     except Exception as e:
-        return False, f"Failed to send invitation to {email}: {str(e)}"
+        error_msg = f"Failed to send invitation to {email}: {str(e)}"
+        logger.error(f"❌ Email sending failed: {error_msg}")
+        logger.error(f"Exception type: {type(e).__name__}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        
+        print(f"❌ EMAIL FAILED: {error_msg}")
+        print(f"   Exception type: {type(e).__name__}")
+        print(f"   Full error: {str(e)}")
+        
+        return False, error_msg
 
 def send_meeting_invitation(meeting, email_list, include_voice_setup=True):
     """Send meeting invitation with optional voice setup to multiple recipients"""
