@@ -1,0 +1,229 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Speakers - Huddle{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Speaker Profiles</h1>
+    <p class="page-subtitle">Manage voice profiles for your organization</p>
+</div>
+
+<!-- Search -->
+<div class="card">
+    <form method="get" style="display: flex; gap: 15px; align-items: end;">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label class="form-label" for="search">Search Speakers</label>
+            <input type="text" id="search" name="search" class="form-control" 
+                   placeholder="Search by name, email, or job title..." 
+                   value="{{ search }}">
+        </div>
+        
+        <button type="submit" class="btn btn-secondary">🔍 Search</button>
+        {% if search %}
+            <a href="{% url 'speakers' %}" class="btn btn-secondary">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Speakers Grid -->
+<div class="card">
+    {% if speakers %}
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
+            {% for speaker in speakers %}
+            <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; background: #fafafa;">
+                <div style="display: flex; align-items: start; gap: 15px; margin-bottom: 15px;">
+                    <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px;">
+                        {{ speaker.full_name|first|upper }}
+                    </div>
+                    
+                    <div style="flex: 1;">
+                        <h4 style="margin: 0 0 5px 0; color: #1f2937;">{{ speaker.full_name }}</h4>
+                        <p style="margin: 0 0 5px 0; color: #6b7280; font-size: 14px;">{{ speaker.email }}</p>
+                        {% if speaker.job_title %}
+                            <p style="margin: 0; color: #9ca3af; font-size: 13px;">{{ speaker.job_title }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        {% if speaker.is_active %}
+                            <span class="badge badge-success">Active</span>
+                        {% else %}
+                            <span class="badge badge-warning">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Voice Sample -->
+                {% if speaker.sample_audio %}
+                    <div style="margin-bottom: 15px; padding: 10px; background: #e6fffa; border-radius: 6px; border-left: 3px solid #10b981;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+                            <small style="color: #065f46; font-weight: 500;">Voice Sample Available</small>
+                            <span style="color: #10b981; font-size: 16px;">🎤</span>
+                        </div>
+                        <audio controls style="width: 100%; height: 30px;">
+                            <source src="{{ speaker.sample_audio.url }}" type="audio/webm">
+                            Your browser does not support audio playback.
+                        </audio>
+                    </div>
+                {% else %}
+                    <div style="margin-bottom: 15px; padding: 10px; background: #fef3c7; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <small style="color: #92400e; font-weight: 500;">No Voice Sample</small>
+                            <span style="color: #f59e0b; font-size: 16px;">🎯</span>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Statistics -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                    <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                        <div style="font-size: 16px; font-weight: bold; color: #1f2937;">{{ speaker.meetings_count }}</div>
+                        <div style="font-size: 11px; color: #6b7280;">Meetings</div>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                        <div style="font-size: 16px; font-weight: bold; color: #10b981;">{{ speaker.accuracy_score|floatformat:0 }}%</div>
+                        <div style="font-size: 11px; color: #6b7280;">Accuracy</div>
+                    </div>
+                    
+                    <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                        <div style="font-size: 16px; font-weight: bold; color: #6366f1;">{{ speaker.created_at|date:"M j" }}</div>
+                        <div style="font-size: 11px; color: #6b7280;">Added</div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div style="display: flex; gap: 8px;">
+                    {% if not speaker.sample_audio %}
+                        <button onclick="sendVoiceSetup('{{ speaker.email }}')" 
+                                class="btn btn-primary" style="flex: 1; padding: 8px; font-size: 12px;">
+                            📧 Send Setup
+                        </button>
+                    {% endif %}
+                    
+                    <button onclick="viewSpeakerDetails('{{ speaker.id }}')" 
+                            class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;">
+                        👁️
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Summary Stats -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #1f2937;">{{ speakers|length }}</div>
+                    <div style="color: #6b7280; font-size: 14px;">Total Speakers</div>
+                </div>
+                
+                <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #10b981;">
+                        {% for speaker in speakers %}
+                            {% if speaker.sample_audio %}{{ forloop.counter }}{% endif %}
+                        {% empty %}0{% endfor %}
+                    </div>
+                    <div style="color: #6b7280; font-size: 14px;">With Voice Samples</div>
+                </div>
+                
+                <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">
+                        {% for speaker in speakers %}
+                            {% if not speaker.sample_audio %}{{ forloop.counter }}{% endif %}
+                        {% empty %}0{% endfor %}
+                    </div>
+                    <div style="color: #6b7280; font-size: 14px;">Need Setup</div>
+                </div>
+                
+                <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #6366f1;">
+                        {% for speaker in speakers %}{{ speaker.meetings_count|add:0 }}{% empty %}0{% endfor %}
+                    </div>
+                    <div style="color: #6b7280; font-size: 14px;">Total Meetings</div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 60px; color: #6b7280;">
+            <div style="font-size: 64px; margin-bottom: 20px;">👥</div>
+            <h3 style="margin-bottom: 10px; color: #1f2937;">
+                {% if search %}
+                    No speakers found
+                {% else %}
+                    No speaker profiles yet
+                {% endif %}
+            </h3>
+            <p style="margin-bottom: 30px;">
+                {% if search %}
+                    Try adjusting your search criteria
+                {% else %}
+                    Speaker profiles are created when attendees complete voice setup
+                {% endif %}
+            </p>
+            
+            {% if search %}
+                <a href="{% url 'speakers' %}" class="btn btn-secondary">
+                    Clear Search
+                </a>
+            {% else %}
+                <a href="{% url 'create_meeting' %}" class="btn btn-primary">
+                    Create Meeting
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Tips Card -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">💡 Speaker Profile Tips</h3>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <div>
+            <h4 style="color: #1f2937; margin-bottom: 10px;">🎤 Voice Quality</h4>
+            <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                <li>Clear, 10-15 second recordings work best</li>
+                <li>Quiet environment improves accuracy</li>
+                <li>Natural speaking pace is ideal</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h4 style="color: #1f2937; margin-bottom: 10px;">📈 Improving Accuracy</h4>
+            <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                <li>Accuracy improves with each meeting</li>
+                <li>Consistent microphone setup helps</li>
+                <li>Manual corrections train the system</li>
+            </ul>
+        </div>
+        
+        <div>
+            <h4 style="color: #1f2937; margin-bottom: 10px;">🔒 Privacy & Security</h4>
+            <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                <li>Voice samples are encrypted</li>
+                <li>Only you can access your speakers</li>
+                <li>Profiles can be deleted anytime</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+async function sendVoiceSetup(email) {
+    if (!confirm(`Send voice setup invitation to ${email}?`)) {
+        return;
+    }
+    
+    // This would require a meeting context or separate endpoint
+    alert('Feature requires meeting context - send invitations from meeting management page');
+}
+
+function viewSpeakerDetails(speakerId) {
+    // Could open a modal or navigate to detail page
+    alert(`Speaker details view - ID: ${speakerId}`);
+}
+</script>
+{% endblock %}

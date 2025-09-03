@@ -1,0 +1,303 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Meetings - Huddle{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="page-title">All Meetings</h1>
+            <p class="page-subtitle">Manage your meeting history and active sessions</p>
+        </div>
+        
+        <a href="{% url 'create_meeting' %}" class="btn btn-primary">
+            ➕ New Meeting
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filters -->
+<div class="card">
+    <form method="get" style="display: flex; gap: 15px; align-items: end;">
+        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label class="form-label" for="search">Search Meetings</label>
+            <input type="text" id="search" name="search" class="form-control" 
+                   placeholder="Search by title or meeting ID..." 
+                   value="{{ search }}">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="status">Status</label>
+            <select id="status" name="status" class="form-control" style="width: 150px;">
+                <option value="">All Status</option>
+                <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        
+        <button type="submit" class="btn btn-secondary">🔍 Search</button>
+        {% if search or status %}
+            <a href="{% url 'meetings_list' %}" class="btn btn-secondary">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Meetings Table -->
+<div class="card">
+    {% if meetings %}
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Meeting</th>
+                        <th>Status</th>
+                        <th>Attendees</th>
+                        <th>Voice Profiles</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for meeting in meetings %}
+                    <tr>
+                        <td>
+                            <div>
+                                <strong style="font-size: 16px;">
+                                    <a href="{% url 'meeting_detail' meeting.meeting_id %}" 
+                                       style="color: #1f2937; text-decoration: none;">
+                                        {{ meeting.title|default:"Untitled Meeting" }}
+                                    </a>
+                                </strong><br>
+                                <small style="color: #6b7280;">ID: {{ meeting.meeting_id }}</small>
+                                {% if meeting.organization_name %}
+                                    <br><small style="color: #6b7280;">{{ meeting.organization_name }}</small>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if meeting.is_active %}
+                                <span class="badge badge-success">Active</span>
+                            {% else %}
+                                <span class="badge badge-warning">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="text-align: center;">
+                                <div style="font-size: 18px; font-weight: bold; color: #1f2937;">
+                                    {{ meeting.expected_speakers|length }}
+                                </div>
+                                <small style="color: #6b7280;">expected</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="text-align: center;">
+                                <div style="font-size: 18px; font-weight: bold; color: #10b981;">
+                                    {{ meeting.speaker_count }}
+                                </div>
+                                <small style="color: #6b7280;">with profiles</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="color: #6b7280;">
+                                {{ meeting.created_at|date:"M j, Y" }}<br>
+                                <small>{{ meeting.created_at|time:"g:i A" }}</small>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <a href="{% url 'meeting_detail' meeting.meeting_id %}" 
+                                   class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">
+                                    Manage
+                                </a>
+                                <a href="/meet/{{ meeting.meeting_id }}/" target="_blank"
+                                   class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">
+                                    Join
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Meeting Summary Stats -->
+        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #1f2937;">{{ meetings|length }}</div>
+                    <div style="color: #6b7280; font-size: 14px;">Meetings Shown</div>
+                </div>
+                
+                <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #10b981;">
+                        {% for meeting in meetings %}
+                            {% if meeting.is_active %}{{ forloop.counter }}{% endif %}
+                        {% empty %}0{% endfor %}
+                    </div>
+                    <div style="color: #6b7280; font-size: 14px;">Active</div>
+                </div>
+                
+                <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">
+                        {% for meeting in meetings %}{{ meeting.expected_speakers|length|add:0 }}{% empty %}0{% endfor %}
+                    </div>
+                    <div style="color: #6b7280; font-size: 14px;">Total Attendees</div>
+                </div>
+                
+                <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px;">
+                    <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">
+                        {% for meeting in meetings %}{{ meeting.speaker_count|add:0 }}{% empty %}0{% endfor %}
+                    </div>
+                    <div style="color: #6b7280; font-size: 14px;">Voice Profiles</div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div style="text-align: center; padding: 60px; color: #6b7280;">
+            <div style="font-size: 64px; margin-bottom: 20px;">📅</div>
+            <h3 style="margin-bottom: 10px; color: #1f2937;">
+                {% if search or status %}
+                    No meetings found
+                {% else %}
+                    No meetings created yet
+                {% endif %}
+            </h3>
+            <p style="margin-bottom: 30px;">
+                {% if search or status %}
+                    Try adjusting your search criteria or filters
+                {% else %}
+                    Get started by creating your first meeting
+                {% endif %}
+            </p>
+            
+            {% if search or status %}
+                <a href="{% url 'meetings_list' %}" class="btn btn-secondary">
+                    Clear Filters
+                </a>
+            {% else %}
+                <a href="{% url 'create_meeting' %}" class="btn btn-primary">
+                    Create First Meeting
+                </a>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<!-- Quick Actions -->
+{% if meetings %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">Bulk Actions</h3>
+        <p style="color: #6b7280; font-size: 14px; margin: 0;">Select meetings to perform bulk operations</p>
+    </div>
+    
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button onclick="selectAllMeetings()" class="btn btn-secondary">Select All</button>
+        <button onclick="clearSelection()" class="btn btn-secondary">Clear Selection</button>
+        <button onclick="bulkSendInvitations()" class="btn btn-success">📧 Send Invitations</button>
+        <button onclick="bulkToggleStatus()" class="btn btn-warning">⏸️ Toggle Status</button>
+    </div>
+    
+    <div id="bulkActions" style="margin-top: 15px; display: none;">
+        <p style="color: #6b7280; font-size: 14px;">
+            <span id="selectedCount">0</span> meetings selected
+        </p>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.table tbody tr:hover {
+    background: #f9fafb;
+    cursor: pointer;
+}
+
+.meeting-selected {
+    background: #e0e7ff !important;
+}
+
+.table th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+</style>
+
+<script>
+let selectedMeetings = new Set();
+
+function selectAllMeetings() {
+    const checkboxes = document.querySelectorAll('.meeting-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = true;
+        selectedMeetings.add(cb.value);
+        cb.closest('tr').classList.add('meeting-selected');
+    });
+    updateBulkActions();
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.meeting-checkbox');
+    checkboxes.forEach(cb => {
+        cb.checked = false;
+        cb.closest('tr').classList.remove('meeting-selected');
+    });
+    selectedMeetings.clear();
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const count = selectedMeetings.size;
+    const bulkDiv = document.getElementById('bulkActions');
+    const countSpan = document.getElementById('selectedCount');
+    
+    if (count > 0) {
+        bulkDiv.style.display = 'block';
+        countSpan.textContent = count;
+    } else {
+        bulkDiv.style.display = 'none';
+    }
+}
+
+function bulkSendInvitations() {
+    if (selectedMeetings.size === 0) {
+        alert('Please select meetings first');
+        return;
+    }
+    
+    if (confirm(`Send voice setup invitations for ${selectedMeetings.size} meetings?`)) {
+        // Implementation would go here
+        alert('Feature coming soon!');
+    }
+}
+
+function bulkToggleStatus() {
+    if (selectedMeetings.size === 0) {
+        alert('Please select meetings first');
+        return;
+    }
+    
+    if (confirm(`Toggle status for ${selectedMeetings.size} meetings?`)) {
+        // Implementation would go here
+        alert('Feature coming soon!');
+    }
+}
+
+// Add click handlers to table rows
+document.querySelectorAll('.table tbody tr').forEach(row => {
+    row.addEventListener('click', function(e) {
+        // Don't trigger on button clicks
+        if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {
+            return;
+        }
+        
+        const meetingId = this.dataset.meetingId;
+        if (meetingId) {
+            window.location.href = `/dashboard/meeting/${meetingId}/`;
+        }
+    });
+});
+</script>
+{% endblock %}

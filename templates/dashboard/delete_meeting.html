@@ -1,0 +1,133 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Delete Meeting - Huddle{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Delete Meeting</h1>
+    <p class="page-subtitle">This action cannot be undone</p>
+</div>
+
+<div style="max-width: 600px;">
+    <div class="card">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="font-size: 64px; margin-bottom: 15px; color: #ef4444;">⚠️</div>
+            <h3 style="color: #ef4444; margin-bottom: 15px;">Confirm Deletion</h3>
+            <p style="color: #6b7280;">You are about to permanently delete this meeting and all associated data.</p>
+        </div>
+        
+        <!-- Meeting Info -->
+        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <h4 style="margin-bottom: 15px; color: #1f2937;">Meeting Details</h4>
+            
+            <div style="display: grid; gap: 10px;">
+                <div>
+                    <strong>Title:</strong> {{ meeting.title|default:"Untitled Meeting" }}
+                </div>
+                <div>
+                    <strong>Meeting ID:</strong> {{ meeting.meeting_id }}
+                </div>
+                <div>
+                    <strong>Attendees:</strong> {{ meeting.expected_speakers|length }} expected
+                </div>
+                <div>
+                    <strong>Created:</strong> {{ meeting.created_at|date:"M j, Y at g:i A" }}
+                </div>
+                <div>
+                    <strong>Status:</strong> 
+                    {% if meeting.is_active %}
+                        <span class="badge badge-success">Active</span>
+                    {% else %}
+                        <span class="badge badge-warning">Inactive</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Warning Information -->
+        <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 15px; border-radius: 8px; margin-bottom: 30px;">
+            <h5 style="color: #dc2626; margin-bottom: 10px;">What will be deleted:</h5>
+            <ul style="color: #7f1d1d; margin: 0; padding-left: 20px;">
+                <li>Meeting configuration and settings</li>
+                <li>Expected attendee list</li>
+                <li>Meeting-specific associations</li>
+                <li>Join links will become invalid</li>
+            </ul>
+            
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #fecaca;">
+                <h6 style="color: #dc2626; margin-bottom: 5px;">Note:</h6>
+                <p style="color: #7f1d1d; margin: 0; font-size: 14px;">
+                    Speaker voice profiles will <strong>not</strong> be deleted and can be reused in future meetings.
+                </p>
+            </div>
+        </div>
+        
+        <!-- Confirmation Form -->
+        <form method="post">
+            {% csrf_token %}
+            
+            <div style="background: #fff7ed; border: 1px solid #fed7aa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <label style="display: flex; align-items: center; gap: 10px; color: #92400e;">
+                    <input type="checkbox" id="confirmDelete" required style="transform: scale(1.2);">
+                    <span>I understand this action is permanent and cannot be undone</span>
+                </label>
+            </div>
+            
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <a href="{% url 'meeting_detail' meeting.meeting_id %}" class="btn btn-secondary">
+                    ← Cancel
+                </a>
+                <button type="submit" id="deleteButton" class="btn btn-danger" disabled>
+                    🗑️ Delete Meeting
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Alternative Actions -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Alternative Actions</h3>
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">Consider these options instead of deleting</p>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
+                <div style="font-size: 32px; margin-bottom: 10px;">⏸️</div>
+                <h4 style="margin-bottom: 10px;">Deactivate Meeting</h4>
+                <p style="color: #6b7280; font-size: 14px; margin-bottom: 15px;">Keep the meeting but make it inactive</p>
+                <a href="{% url 'meeting_detail' meeting.meeting_id %}" class="btn btn-secondary">Manage Status</a>
+            </div>
+            
+            <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
+                <div style="font-size: 32px; margin-bottom: 10px;">📋</div>
+                <h4 style="margin-bottom: 10px;">Archive Meeting</h4>
+                <p style="color: #6b7280; font-size: 14px; margin-bottom: 15px;">Move to archived status for future reference</p>
+                <button class="btn btn-secondary" disabled>Coming Soon</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('confirmDelete').addEventListener('change', function() {
+    const deleteButton = document.getElementById('deleteButton');
+    deleteButton.disabled = !this.checked;
+    
+    if (this.checked) {
+        deleteButton.style.opacity = '1';
+    } else {
+        deleteButton.style.opacity = '0.5';
+    }
+});
+
+// Add additional confirmation on submit
+document.querySelector('form').addEventListener('submit', function(e) {
+    const meetingTitle = "{{ meeting.title|default:'this meeting' }}";
+    
+    if (!confirm(`Are you absolutely sure you want to delete "${meetingTitle}"?\n\nThis action cannot be undone.`)) {
+        e.preventDefault();
+    }
+});
+</script>
+{% endblock %}

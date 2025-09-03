@@ -1,0 +1,166 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Dashboard - Huddle{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Overview of your meetings and speaker profiles</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ total_meetings }}</div>
+        <div class="stat-label">Total Meetings</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-value">{{ active_meetings }}</div>
+        <div class="stat-label">Active Meetings</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-value">{{ total_speakers }}</div>
+        <div class="stat-label">Speaker Profiles</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-value">{{ speakers_with_voice }}</div>
+        <div class="stat-label">With Voice Samples</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+    <!-- Recent Meetings -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Recent Meetings</h3>
+            <a href="{% url 'create_meeting' %}" class="btn btn-primary">
+                ➕ New Meeting
+            </a>
+        </div>
+        
+        {% if recent_meetings %}
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Meeting</th>
+                            <th>Status</th>
+                            <th>Attendees</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for meeting in recent_meetings %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>{{ meeting.title|default:"Untitled Meeting" }}</strong><br>
+                                    <small style="color: #6b7280;">ID: {{ meeting.meeting_id }}</small>
+                                </div>
+                            </td>
+                            <td>
+                                {% if meeting.is_active %}
+                                    <span class="badge badge-success">Active</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span style="color: #6b7280;">{{ meeting.expected_speakers|length }} expected</span>
+                            </td>
+                            <td>
+                                <small style="color: #6b7280;">{{ meeting.created_at|date:"M j, Y" }}</small>
+                            </td>
+                            <td>
+                                <a href="{% url 'meeting_detail' meeting.meeting_id %}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">
+                                    View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="{% url 'meetings_list' %}" class="btn btn-secondary">View All Meetings</a>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 40px; color: #6b7280;">
+                <div style="font-size: 48px; margin-bottom: 15px;">📅</div>
+                <h4>No meetings yet</h4>
+                <p>Get started by creating your first meeting</p>
+                <a href="{% url 'create_meeting' %}" class="btn btn-primary" style="margin-top: 15px;">
+                    Create First Meeting
+                </a>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Upcoming Meetings -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Upcoming</h3>
+        </div>
+        
+        {% if upcoming_meetings %}
+            {% for meeting in upcoming_meetings %}
+            <div style="padding: 15px; border: 1px solid #e5e7eb; border-radius: 8px; margin-bottom: 15px;">
+                <div style="font-weight: 600; margin-bottom: 5px;">
+                    {{ meeting.title|default:"Untitled Meeting" }}
+                </div>
+                <div style="color: #6b7280; font-size: 14px; margin-bottom: 5px;">
+                    {{ meeting.started_at|date:"M j, g:i A" }}
+                </div>
+                <div style="color: #6b7280; font-size: 12px;">
+                    {{ meeting.expected_speakers|length }} attendees
+                </div>
+                <div style="margin-top: 10px;">
+                    <a href="{% url 'meeting_detail' meeting.meeting_id %}" style="font-size: 12px; color: #667eea;">
+                        Manage →
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 30px; color: #6b7280;">
+                <div style="font-size: 32px; margin-bottom: 10px;">⏰</div>
+                <p style="font-size: 14px;">No upcoming meetings scheduled</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h3 class="card-title">Quick Actions</h3>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+        <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
+            <div style="font-size: 32px; margin-bottom: 10px;">➕</div>
+            <h4 style="margin-bottom: 10px;">Create Meeting</h4>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 15px;">Start a new meeting and invite attendees</p>
+            <a href="{% url 'create_meeting' %}" class="btn btn-primary">Create</a>
+        </div>
+        
+        <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
+            <div style="font-size: 32px; margin-bottom: 10px;">👥</div>
+            <h4 style="margin-bottom: 10px;">Manage Speakers</h4>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 15px;">View and manage speaker profiles</p>
+            <a href="{% url 'speakers' %}" class="btn btn-secondary">View Speakers</a>
+        </div>
+        
+        <div style="text-align: center; padding: 20px; background: #f9fafb; border-radius: 8px;">
+            <div style="font-size: 32px; margin-bottom: 10px;">📋</div>
+            <h4 style="margin-bottom: 10px;">All Meetings</h4>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 15px;">Browse your complete meeting history</p>
+            <a href="{% url 'meetings_list' %}" class="btn btn-secondary">View All</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

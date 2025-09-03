@@ -24,6 +24,8 @@ from django.shortcuts import redirect
 from django.views.decorators.csrf import csrf_exempt
 from apps.meetings import views as meeting_views
 from apps.meetings import voice_views
+from apps.meetings import auth_views
+from apps.meetings import management_views
 import os
 
 def home_view(request):
@@ -106,13 +108,36 @@ def db_test(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.api.urls')),
+    
+    # Authentication
+    path('login/', auth_views.login_view, name='login'),
+    path('logout/', auth_views.logout_view, name='logout'),
+    
+    # Dashboard
+    path('dashboard/', auth_views.dashboard_view, name='dashboard'),
+    path('dashboard/meetings/', auth_views.meetings_list_view, name='meetings_list'),
+    path('dashboard/speakers/', auth_views.speakers_view, name='speakers'),
+    
+    # Meeting Management
+    path('dashboard/meeting/create/', management_views.create_meeting_view, name='create_meeting'),
+    path('dashboard/meeting/<str:meeting_id>/', management_views.meeting_detail_view, name='meeting_detail'),
+    path('dashboard/meeting/<str:meeting_id>/delete/', management_views.delete_meeting_view, name='delete_meeting'),
+    path('api/meeting/<str:meeting_id>/add-attendees/', management_views.add_attendees_view, name='add_attendees'),
+    path('api/meeting/<str:meeting_id>/remove-attendee/', management_views.remove_attendee_view, name='remove_attendee'),
+    path('api/meeting/<str:meeting_id>/send-invitations/', management_views.send_invitations_view, name='send_invitations'),
+    
+    # Meeting Room (Public)
     path('meet/<str:meeting_id>/', meeting_views.join_meeting, name='join_meeting'),
     path('meet/<str:meeting_id>/room/', meeting_views.meeting_room, name='meeting_room'),
+    
+    # Voice Setup (Public)
     path('meet/<str:meeting_id>/voice-setup/', voice_views.voice_setup_view, name='voice_setup'),
     path('meet/<str:meeting_id>/voice-setup-process/', voice_views.process_voice_setup, name='process_voice_setup'),
     path('meet/<str:meeting_id>/voice-setup-complete/', voice_views.voice_setup_view, name='voice_setup_complete'),
     path('api/meeting/<str:meeting_id>/speakers/', voice_views.meeting_speaker_status, name='meeting_speaker_status'),
-    path('', home_view, name='home'),
+    
+    # Root redirects to dashboard
+    path('', lambda request: redirect('dashboard' if request.user.is_authenticated else 'login'), name='home'),
 ]
 
 # Serve media files in development

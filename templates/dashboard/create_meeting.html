@@ -1,0 +1,165 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Create Meeting - Huddle{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Create New Meeting</h1>
+    <p class="page-subtitle">Set up a new meeting and invite attendees</p>
+</div>
+
+<div style="max-width: 800px;">
+    <form method="post" class="card">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label" for="title">Meeting Title *</label>
+            <input type="text" id="title" name="title" class="form-control" 
+                   placeholder="e.g., Weekly Team Standup" 
+                   value="{{ title|default:'' }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="attendees">Attendees *</label>
+            <textarea id="attendees" name="attendees" class="form-control" 
+                      placeholder="Enter email addresses (one per line or comma-separated)&#10;john@company.com&#10;jane@company.com&#10;bob@company.com" 
+                      rows="6">{{ attendees|default:'' }}</textarea>
+            <small style="color: #6b7280; font-size: 12px; margin-top: 5px; display: block;">
+                💡 Tip: You can paste email addresses separated by commas or new lines
+            </small>
+        </div>
+        
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" name="send_invites" {% if not attendees %}checked{% endif %}>
+                <span class="form-label" style="margin: 0;">Send voice setup invitations immediately</span>
+            </label>
+            <small style="color: #6b7280; font-size: 12px; margin-top: 5px; display: block; margin-left: 20px;">
+                Attendees will receive emails with links to set up their voice profiles
+            </small>
+        </div>
+        
+        <div style="display: flex; gap: 15px; margin-top: 30px;">
+            <button type="submit" class="btn btn-primary">
+                ✨ Create Meeting
+            </button>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+    
+    <!-- Suggested Speakers -->
+    {% if suggested_speakers %}
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-header">
+            <h3 class="card-title">Quick Add Speakers</h3>
+            <p style="color: #6b7280; font-size: 14px; margin: 0;">Click to add from your existing speakers</p>
+        </div>
+        
+        <div style="display: flex; flex-wrap: gap: 10px;">
+            {% for speaker in suggested_speakers %}
+            <button type="button" class="suggested-speaker" 
+                    onclick="addSpeaker('{{ speaker.email }}', '{{ speaker.full_name }}')"
+                    style="background: #f3f4f6; border: 1px solid #d1d5db; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.3s;">
+                {{ speaker.full_name }} ({{ speaker.email }})
+                {% if speaker.job_title %}
+                    <br><small style="color: #6b7280;">{{ speaker.job_title }}</small>
+                {% endif %}
+            </button>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Meeting Guidelines -->
+    <div class="card" style="margin-top: 20px;">
+        <div class="card-header">
+            <h3 class="card-title">📋 Meeting Setup Guidelines</h3>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <div>
+                <h4 style="color: #1f2937; margin-bottom: 10px;">📧 Email Invitations</h4>
+                <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                    <li>Attendees receive voice setup links</li>
+                    <li>Links expire in 7 days for security</li>
+                    <li>Voice profiles work across meetings</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h4 style="color: #1f2937; margin-bottom: 10px;">🎤 Voice Setup</h4>
+                <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                    <li>10-15 second voice samples</li>
+                    <li>Improves speaker identification</li>
+                    <li>Optional but highly recommended</li>
+                </ul>
+            </div>
+            
+            <div>
+                <h4 style="color: #1f2937; margin-bottom: 10px;">📱 Meeting Day</h4>
+                <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                    <li>Single phone recording approach</li>
+                    <li>Real-time speaker identification</li>
+                    <li>Live transcript and AI summaries</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.suggested-speaker:hover {
+    background: #e5e7eb !important;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+</style>
+
+<script>
+function addSpeaker(email, name) {
+    const attendeesField = document.getElementById('attendees');
+    const currentValue = attendeesField.value.trim();
+    
+    // Check if email already exists
+    if (currentValue.includes(email)) {
+        return;
+    }
+    
+    // Add the email
+    const newValue = currentValue ? currentValue + '\n' + email : email;
+    attendeesField.value = newValue;
+    
+    // Visual feedback
+    const button = event.target.closest('.suggested-speaker');
+    button.style.background = '#d1fae5';
+    button.style.color = '#065f46';
+    button.style.borderColor = '#10b981';
+    
+    setTimeout(() => {
+        button.style.background = '#f3f4f6';
+        button.style.color = '';
+        button.style.borderColor = '#d1d5db';
+    }, 2000);
+}
+
+// Email validation on paste
+document.getElementById('attendees').addEventListener('paste', function(e) {
+    setTimeout(() => {
+        const text = this.value;
+        const lines = text.split(/[\n,]+/).map(line => line.trim()).filter(line => line);
+        
+        // Basic email validation
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const validEmails = lines.filter(line => emailPattern.test(line));
+        
+        if (validEmails.length !== lines.length) {
+            // Show warning about invalid emails
+            const invalidEmails = lines.filter(line => !emailPattern.test(line));
+            console.warn('Invalid emails detected:', invalidEmails);
+        }
+        
+        this.value = validEmails.join('\n');
+    }, 100);
+});
+</script>
+{% endblock %}

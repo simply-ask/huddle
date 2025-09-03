@@ -1,0 +1,381 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ meeting.title|default:"Meeting" }} - Huddle{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; justify-content: space-between; align-items: start;">
+        <div>
+            <h1 class="page-title">{{ meeting.title|default:"Untitled Meeting" }}</h1>
+            <p class="page-subtitle">Meeting ID: {{ meeting.meeting_id }} • Created {{ meeting.created_at|date:"M j, Y" }}</p>
+        </div>
+        
+        <div style="display: flex; gap: 10px;">
+            {% if meeting.is_active %}
+                <span class="badge badge-success">Active</span>
+            {% else %}
+                <span class="badge badge-warning">Inactive</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+    <!-- Attendee Management -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Attendees ({{ attendee_status|length }})</h3>
+            <button onclick="showAddAttendeeModal()" class="btn btn-primary">
+                ➕ Add Attendees
+            </button>
+        </div>
+        
+        {% if attendee_status %}
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Attendee</th>
+                            <th>Voice Profile</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attendee in attendee_status %}
+                        <tr data-email="{{ attendee.email }}">
+                            <td>
+                                <div>
+                                    <strong>{{ attendee.name }}</strong><br>
+                                    <small style="color: #6b7280;">{{ attendee.email }}</small>
+                                    {% if attendee.job_title %}
+                                        <br><small style="color: #6b7280;">{{ attendee.job_title }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if attendee.has_profile %}
+                                    {% if attendee.has_voice %}
+                                        <span class="badge badge-success">✓ Complete</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Profile Only</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge badge-info">Not Set Up</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if attendee.has_voice %}
+                                    <span style="color: #10b981;">Ready</span>
+                                {% else %}
+                                    <span style="color: #f59e0b;">Needs Setup</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 5px;">
+                                    {% if not attendee.has_voice %}
+                                        <button onclick="sendInvitation('{{ attendee.email }}')" 
+                                                class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">
+                                            📧 Invite
+                                        </button>
+                                    {% endif %}
+                                    <button onclick="removeAttendee('{{ attendee.email }}')" 
+                                            class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;">
+                                        ✕
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div style="margin-top: 20px; display: flex; gap: 10px;">
+                <button onclick="sendAllInvitations()" class="btn btn-success">
+                    📧 Send All Invitations
+                </button>
+                <button onclick="refreshAttendees()" class="btn btn-secondary">
+                    🔄 Refresh
+                </button>
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 40px; color: #6b7280;">
+                <div style="font-size: 48px; margin-bottom: 15px;">👥</div>
+                <h4>No attendees added</h4>
+                <p>Add attendees to get started with this meeting</p>
+                <button onclick="showAddAttendeeModal()" class="btn btn-primary" style="margin-top: 15px;">
+                    Add First Attendee
+                </button>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Meeting Info & Actions -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Meeting Links</h3>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Meeting Join URL</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="meetingUrl" class="form-control" 
+                           value="{{ meeting_url }}" readonly>
+                    <button onclick="copyToClipboard('meetingUrl')" class="btn btn-secondary">
+                        📋 Copy
+                    </button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <a href="{{ meeting_url }}" target="_blank" class="btn btn-primary" style="width: 100%;">
+                    🚪 Join Meeting Room
+                </a>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Meeting Statistics</h3>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <div style="font-size: 24px; font-weight: bold; color: #1f2937;">{{ attendee_status|length }}</div>
+                    <div style="color: #6b7280; font-size: 12px;">Total Attendees</div>
+                </div>
+                
+                <div>
+                    <div style="font-size: 24px; font-weight: bold; color: #10b981;">
+                        {% for attendee in attendee_status %}
+                            {% if attendee.has_voice %}{{ forloop.counter }}{% endif %}
+                        {% empty %}0{% endfor %}
+                    </div>
+                    <div style="color: #6b7280; font-size: 12px;">Voice Profiles</div>
+                </div>
+                
+                <div>
+                    <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">
+                        {% for attendee in attendee_status %}
+                            {% if not attendee.has_voice %}{{ forloop.counter }}{% endif %}
+                        {% empty %}0{% endfor %}
+                    </div>
+                    <div style="color: #6b7280; font-size: 12px;">Need Setup</div>
+                </div>
+                
+                <div>
+                    <div style="font-size: 24px; font-weight: bold; color: {% if meeting.is_active %}#10b981{% else %}#6b7280{% endif %};">
+                        {% if meeting.is_active %}✓{% else %}—{% endif %}
+                    </div>
+                    <div style="color: #6b7280; font-size: 12px;">Status</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Actions</h3>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <a href="{% url 'meetings_list' %}" class="btn btn-secondary">
+                    ← Back to Meetings
+                </a>
+                
+                <button onclick="toggleMeetingStatus()" class="btn {% if meeting.is_active %}btn-danger{% else %}btn-success{% endif %}">
+                    {% if meeting.is_active %}⏸️ Deactivate{% else %}▶️ Activate{% endif %}
+                </button>
+                
+                <a href="{% url 'delete_meeting' meeting.meeting_id %}" class="btn btn-danger">
+                    🗑️ Delete Meeting
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Attendee Modal -->
+<div id="addAttendeeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px;">
+        <h3 style="margin-bottom: 20px;">Add Attendees</h3>
+        
+        <div class="form-group">
+            <label class="form-label">Email Addresses</label>
+            <textarea id="newAttendees" class="form-control" 
+                      placeholder="Enter email addresses (one per line)&#10;john@company.com&#10;jane@company.com" 
+                      rows="4"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="sendInvitesCheck" checked>
+                Send voice setup invitations
+            </label>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button onclick="addAttendees()" class="btn btn-primary">Add Attendees</button>
+            <button onclick="closeAddAttendeeModal()" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAddAttendeeModal() {
+    document.getElementById('addAttendeeModal').style.display = 'flex';
+}
+
+function closeAddAttendeeModal() {
+    document.getElementById('addAttendeeModal').style.display = 'none';
+    document.getElementById('newAttendees').value = '';
+}
+
+async function addAttendees() {
+    const textarea = document.getElementById('newAttendees');
+    const sendInvites = document.getElementById('sendInvitesCheck').checked;
+    
+    const emails = textarea.value.split('\n')
+        .map(line => line.trim())
+        .filter(line => line);
+    
+    if (emails.length === 0) {
+        alert('Please enter at least one email address');
+        return;
+    }
+    
+    try {
+        const response = await fetch('{% url "add_attendees" meeting.meeting_id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                emails: emails,
+                send_invites: sendInvites
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`Successfully added ${data.added.length} attendees`);
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    }
+}
+
+async function removeAttendee(email) {
+    if (!confirm(`Remove ${email} from this meeting?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('{% url "remove_attendee" meeting.meeting_id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ email: email })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            document.querySelector(`tr[data-email="${email}"]`).remove();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    }
+}
+
+async function sendInvitation(email) {
+    try {
+        const response = await fetch('{% url "send_invitations" meeting.meeting_id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ emails: [email] })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`Invitation sent to ${email}`);
+        } else {
+            alert('Error sending invitation');
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    }
+}
+
+async function sendAllInvitations() {
+    try {
+        const response = await fetch('{% url "send_invitations" meeting.meeting_id %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ emails: [] }) // Empty means all who need setup
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(`Invitations sent to ${data.sent} attendees`);
+        } else {
+            alert('Error sending invitations');
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    }
+}
+
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    alert('Copied to clipboard!');
+}
+
+function refreshAttendees() {
+    location.reload();
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Close modal when clicking outside
+document.getElementById('addAttendeeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAddAttendeeModal();
+    }
+});
+</script>
+{% endblock %}
