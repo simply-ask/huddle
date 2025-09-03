@@ -17,22 +17,23 @@ def debug_email_config():
     """Log email configuration for debugging"""
     logger.info("=== EMAIL CONFIGURATION DEBUG ===")
     logger.info(f"EMAIL_BACKEND: {settings.EMAIL_BACKEND}")
-    logger.info(f"EMAIL_HOST: {getattr(settings, 'EMAIL_HOST', 'Not set')}")
-    logger.info(f"EMAIL_PORT: {getattr(settings, 'EMAIL_PORT', 'Not set')}")
-    logger.info(f"EMAIL_USE_SSL: {getattr(settings, 'EMAIL_USE_SSL', 'Not set')}")
-    logger.info(f"EMAIL_USE_TLS: {getattr(settings, 'EMAIL_USE_TLS', 'Not set')}")
-    logger.info(f"EMAIL_HOST_USER: {getattr(settings, 'EMAIL_HOST_USER', 'Not set')}")
     logger.info(f"DEFAULT_FROM_EMAIL: {getattr(settings, 'DEFAULT_FROM_EMAIL', 'Not set')}")
-    logger.info(f"DO_EMAIL_PASSWORD set: {'Yes' if os.getenv('DO_EMAIL_PASSWORD') else 'No'}")
+    logger.info(f"SENDGRID_API_KEY set: {'Yes' if os.getenv('SENDGRID_API_KEY') else 'No'}")
+    if os.getenv('SENDGRID_API_KEY'):
+        api_key = os.getenv('SENDGRID_API_KEY')
+        logger.info(f"SENDGRID_API_KEY length: {len(api_key)} chars")
+        logger.info(f"SENDGRID_API_KEY starts with: {api_key[:10]}...")
     logger.info(f"SITE_URL: {getattr(settings, 'SITE_URL', 'Not set')}")
     logger.info("=== END EMAIL CONFIG DEBUG ===")
     
     # Also print to console for immediate visibility
     print("📧 EMAIL DEBUG INFO:")
     print(f"   Backend: {settings.EMAIL_BACKEND}")
-    print(f"   Host: {getattr(settings, 'EMAIL_HOST', 'Not set')}")
     print(f"   From: {getattr(settings, 'DEFAULT_FROM_EMAIL', 'Not set')}")
-    print(f"   Password set: {'Yes' if os.getenv('DO_EMAIL_PASSWORD') else 'No'}")
+    print(f"   SendGrid API Key set: {'Yes' if os.getenv('SENDGRID_API_KEY') else 'No'}")
+    if os.getenv('SENDGRID_API_KEY'):
+        api_key = os.getenv('SENDGRID_API_KEY')
+        print(f"   API Key length: {len(api_key)} chars")
 
 def send_voice_setup_invitation(meeting, email, host_name=None):
     """Send voice setup invitation email to a participant"""

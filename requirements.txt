@@ -17,6 +17,9 @@ psycopg2-binary>=2.9.0
 # Audio Processing - Using OpenAI API instead of local Whisper
 openai>=1.0.0  # For API-based transcription (lightweight)
 
+# Email Service
+sendgrid>=6.12.0
+
 # Environment Management
 python-dotenv>=1.0.0
 django-environ>=0.10.0

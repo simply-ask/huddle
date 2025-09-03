@@ -16,18 +16,16 @@ def email_debug_info(request):
     """Debug endpoint to show email configuration"""
     try:
         # Get email configuration
+        sendgrid_api_key = os.getenv('SENDGRID_API_KEY')
         config = {
             'backend': settings.EMAIL_BACKEND,
-            'host': getattr(settings, 'EMAIL_HOST', 'Not set'),
-            'port': getattr(settings, 'EMAIL_PORT', 'Not set'),
-            'use_ssl': getattr(settings, 'EMAIL_USE_SSL', 'Not set'),
-            'use_tls': getattr(settings, 'EMAIL_USE_TLS', 'Not set'),
-            'host_user': getattr(settings, 'EMAIL_HOST_USER', 'Not set'),
             'default_from_email': getattr(settings, 'DEFAULT_FROM_EMAIL', 'Not set'),
-            'password_set': bool(os.getenv('DO_EMAIL_PASSWORD')),
-            'password_length': len(os.getenv('DO_EMAIL_PASSWORD', '')),
+            'sendgrid_api_key_set': bool(sendgrid_api_key),
+            'sendgrid_api_key_length': len(sendgrid_api_key) if sendgrid_api_key else 0,
+            'sendgrid_api_key_prefix': sendgrid_api_key[:10] + '...' if sendgrid_api_key else 'Not set',
             'site_url': getattr(settings, 'SITE_URL', 'Not set'),
             'debug_mode': settings.DEBUG,
+            'using_sendgrid': 'sendgrid_backend' in settings.EMAIL_BACKEND,
         }
         
         # Get environment info
@@ -139,7 +137,7 @@ def email_test_page(request):
         </style>
     </head>
     <body>
-        <h1>📧 Huddle Email Debug</h1>
+        <h1>📧 Huddle Email Debug (SendGrid)</h1>
         
         <div class="section">
             <h2>Email Configuration</h2>

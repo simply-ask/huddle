@@ -198,23 +198,21 @@ AUDIO_FORMATS = ['wav', 'mp3', 'm4a', 'webm']
 MEETING_ID_LENGTH = 8
 DEFAULT_MEETING_DURATION = 2  # hours
 
-# Email settings - environment-aware configuration
-if DEBUG and not os.getenv('FORCE_SMTP_EMAIL'):
+# Email settings - using SendGrid for reliable delivery
+if DEBUG and not os.getenv('FORCE_SENDGRID_EMAIL'):
     # Development: Console backend (emails printed to console)
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    EMAIL_HOST_USER = 'mitchel@simplyask.io'
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+    DEFAULT_FROM_EMAIL = 'mitchel@simplyask.io'
     print("📧 Development mode: Emails will be printed to console")
 else:
-    # Production: Real SMTP (works from whitelisted DigitalOcean IPs)
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'c120541.sgvps.net'
-    EMAIL_PORT = 465
-    EMAIL_USE_SSL = True
-    EMAIL_HOST_USER = 'mitchel@simplyask.io'
-    EMAIL_HOST_PASSWORD = os.getenv('DO_EMAIL_PASSWORD')
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-    print("📧 Production mode: Using SMTP server")
+    # Production: SendGrid API (reliable email delivery)
+    EMAIL_BACKEND = 'apps.core.sendgrid_backend.SendGridBackend'
+    DEFAULT_FROM_EMAIL = 'mitchel@simplyask.io'
+    print("📧 Production mode: Using SendGrid API")
+
+# SendGrid API settings
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+SENDGRID_FROM_EMAIL = 'mitchel@simplyask.io'
 
 SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
 
