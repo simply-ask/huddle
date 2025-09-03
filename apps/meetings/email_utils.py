@@ -5,6 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 from apps.meetings.voice_views import generate_setup_token
 from .models import Meeting
+import ssl
 
 def send_voice_setup_invitation(meeting, email, host_name=None):
     """Send voice setup invitation email to a participant"""
