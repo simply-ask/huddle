@@ -4,18 +4,18 @@ from .processors import AudioProcessor
 
 @shared_task
 def process_audio_recording(recording_id):
-    """Background task to process audio recording with OpenAI Whisper API"""
+    """Background task to process audio recording with Deepgram"""
     try:
         recording = AudioRecording.objects.get(id=recording_id)
         
-        # Process with OpenAI API
+        # Process with Deepgram
         processor = AudioProcessor()
         success = processor.transcribe_audio(recording)
         
         if success:
-            print(f"Successfully processed recording {recording_id} via OpenAI API")
+            print(f"Successfully processed recording {recording_id} via Deepgram")
         else:
-            print(f"Failed to process recording {recording_id}")
+            print(f"Failed to process recording {recording_id} - will retry if configured")
             
         return success
         

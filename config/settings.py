@@ -194,6 +194,10 @@ CELERY_TIMEZONE = 'UTC'
 MAX_UPLOAD_SIZE = 100 * 1024 * 1024  # 100MB
 AUDIO_FORMATS = ['wav', 'mp3', 'm4a', 'webm']
 
+# Transcription service configuration
+DEEPGRAM_API_KEY = os.getenv('DEEPGRAM_API_KEY')
+# Note: OpenAI API key can be added later if needed for AI summaries (GPT-4)
+
 # Meeting settings
 MEETING_ID_LENGTH = 8
 DEFAULT_MEETING_DURATION = 2  # hours
@@ -202,17 +206,17 @@ DEFAULT_MEETING_DURATION = 2  # hours
 if DEBUG and not os.getenv('FORCE_SENDGRID_EMAIL'):
     # Development: Console backend (emails printed to console)
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    DEFAULT_FROM_EMAIL = 'mitchel@simplyask.io'
+    DEFAULT_FROM_EMAIL = 'noreply@huddle.spot'
     print("📧 Development mode: Emails will be printed to console")
 else:
     # Production: SendGrid API (reliable email delivery)
     EMAIL_BACKEND = 'apps.core.sendgrid_backend.SendGridBackend'
-    DEFAULT_FROM_EMAIL = 'mitchel@simplyask.io'
+    DEFAULT_FROM_EMAIL = 'noreply@huddle.spot'
     print("📧 Production mode: Using SendGrid API")
 
 # SendGrid API settings
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
-SENDGRID_FROM_EMAIL = 'mitchel@simplyask.io'
+SENDGRID_FROM_EMAIL = 'noreply@huddle.spot'
 
 SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
 

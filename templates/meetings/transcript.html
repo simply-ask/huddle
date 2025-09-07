@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcript - {{ meeting.title }} | Huddle</title>
+    <style>
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .meeting-title { 
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+            font-size: 28px;
+        }
+        .meeting-id {
+            color: #7f8c8d;
+            font-size: 14px;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+        .processing-status {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .processing-status.incomplete {
+            background: #fff3cd;
+            border-color: #ffc107;
+        }
+        .transcript-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .speaker-section {
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+        }
+        .speaker-section:last-child {
+            border-bottom: none;
+        }
+        .speaker-header {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+        }
+        .speaker-badge {
+            background: #3498db;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        .speaker-badge.speaker-0 { background: #3498db; }
+        .speaker-badge.speaker-1 { background: #e74c3c; }
+        .speaker-badge.speaker-2 { background: #2ecc71; }
+        .speaker-badge.speaker-3 { background: #f39c12; }
+        .speaker-badge.speaker-4 { background: #9b59b6; }
+        .speaker-badge.unknown { background: #95a5a6; }
+        
+        .segment {
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 3px solid #3498db;
+        }
+        .segment-meta {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 6px;
+        }
+        .segment-text {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .no-transcript {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex: 1;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <a href="{% url 'meeting_detail' meeting.meeting_id %}" class="back-link">← Back to Meeting</a>
+    
+    <div class="header">
+        <h1 class="meeting-title">{{ meeting.title|default:"Meeting Transcript" }}</h1>
+        <div class="meeting-id">Meeting ID: {{ meeting.meeting_id }}</div>
+    </div>
+
+    {% if processing_status.processed_recordings < processing_status.total_recordings %}
+        <div class="processing-status incomplete">
+            <strong>⏳ Processing in progress...</strong><br>
+            {{ processing_status.processed_recordings }} of {{ processing_status.total_recordings }} recordings processed.
+            Transcript will update automatically as processing completes.
+        </div>
+    {% else %}
+        <div class="processing-status">
+            <strong>✅ Processing complete!</strong><br>
+            All {{ processing_status.total_recordings }} recordings have been transcribed with speaker identification.
+        </div>
+    {% endif %}
+
+    {% if all_segments %}
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">{{ total_segments }}</div>
+                <div class="stat-label">Segments</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">{{ grouped_segments|length }}</div>
+                <div class="stat-label">Speakers</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">{{ processing_status.processed_recordings }}</div>
+                <div class="stat-label">Recordings</div>
+            </div>
+        </div>
+
+        <div class="transcript-container">
+            {% for speaker_group in grouped_segments %}
+                <div class="speaker-section">
+                    <div class="speaker-header">
+                        <span class="speaker-badge {{ speaker_group.speaker|lower|cut:' '|default:'unknown' }}">
+                            {{ speaker_group.speaker }}
+                        </span>
+                        {{ speaker_group.segments|length }} segment{{ speaker_group.segments|length|pluralize }}
+                    </div>
+                    
+                    {% for segment in speaker_group.segments %}
+                        <div class="segment">
+                            <div class="segment-meta">
+                                {{ segment.start_time|floatformat:1 }}s - {{ segment.end_time|floatformat:1 }}s
+                                {% if segment.recording_service %}
+                                    · Transcribed by {{ segment.recording_service|title }}
+                                {% endif %}
+                            </div>
+                            <div class="segment-text">{{ segment.text }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="transcript-container">
+            <div class="no-transcript">
+                <h3>No transcript available yet</h3>
+                {% if processing_status.total_recordings == 0 %}
+                    <p>No recordings have been uploaded for this meeting.</p>
+                {% else %}
+                    <p>Audio recordings are being processed. Please check back in a few minutes.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% if has_summary and summary.summary %}
+        <div class="summary-section" style="margin-top: 30px;">
+            <div class="header">
+                <h2>AI Summary</h2>
+                <p>{{ summary.summary }}</p>
+                
+                {% if summary.key_points %}
+                    <h3>Key Points</h3>
+                    <ul>
+                        {% for point in summary.key_points %}
+                            <li>{{ point }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
+
+    <script>
+        // Auto-refresh if processing is incomplete
+        {% if processing_status.processed_recordings < processing_status.total_recordings %}
+            setTimeout(() => {
+                window.location.reload();
+            }, 10000); // Refresh every 10 seconds
+        {% endif %}
+    </script>
+</body>
+</html>

@@ -27,6 +27,7 @@ from apps.meetings import voice_views
 from apps.meetings import auth_views
 from apps.meetings import management_views
 from apps.meetings import debug_views
+from apps.meetings import transcript_views
 import os
 
 def home_view(request):
@@ -126,6 +127,10 @@ urlpatterns = [
     path('api/meeting/<str:meeting_id>/add-attendees/', management_views.add_attendees_view, name='add_attendees'),
     path('api/meeting/<str:meeting_id>/remove-attendee/', management_views.remove_attendee_view, name='remove_attendee'),
     path('api/meeting/<str:meeting_id>/send-invitations/', management_views.send_invitations_view, name='send_invitations'),
+    
+    # Transcript Views
+    path('dashboard/meeting/<str:meeting_id>/transcript/', transcript_views.meeting_transcript_view, name='meeting_transcript'),
+    path('api/meeting/<str:meeting_id>/transcript/', transcript_views.meeting_transcript_api, name='meeting_transcript_api'),
     
     # Meeting Room (Public)
     path('meet/<str:meeting_id>/', meeting_views.join_meeting, name='join_meeting'),

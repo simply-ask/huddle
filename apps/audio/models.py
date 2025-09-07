@@ -17,6 +17,15 @@ class AudioRecording(TimeStampedModel):
     processing_started_at = models.DateTimeField(null=True, blank=True)
     processing_completed_at = models.DateTimeField(null=True, blank=True)
     
+    # Transcription service tracking
+    transcription_service = models.CharField(
+        max_length=20, 
+        default='deepgram',
+        help_text="Service used for transcription"
+    )
+    deepgram_request_id = models.CharField(max_length=100, null=True, blank=True)
+    transcription_raw = models.JSONField(default=dict, blank=True, help_text="Raw API response")
+    
     class Meta:
         db_table = 'huddle_audio_recording'
     
@@ -30,6 +39,8 @@ class TranscriptionSegment(TimeStampedModel):
     text = models.TextField()
     confidence = models.FloatField(null=True, blank=True)
     speaker_id = models.CharField(max_length=50, null=True, blank=True)
+    speaker_name = models.CharField(max_length=100, null=True, blank=True, help_text="Identified speaker name")
+    words = models.JSONField(default=list, blank=True, help_text="Word-level timing data")
     
     class Meta:
         db_table = 'huddle_transcription_segment'

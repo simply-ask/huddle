@@ -3,24 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#1f2937">
+    <meta name="theme-color" content="#000000">
     
-    <title>{% block title %}Huddle - AI Meeting Intelligence{% endblock %}</title>
+    <title>{% block title %}huddle{% endblock %}</title>
     
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="{% load static %}{% static 'manifest.json' %}">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
-    <!-- PWA Icons -->
-    <link rel="apple-touch-icon" href="{% load static %}{% static 'icons/icon-192.png' %}">
-    <link rel="icon" type="image/png" sizes="192x192" href="{% load static %}{% static 'icons/icon-192.png' %}">
+    <!-- Toaster UI - Clean, minimal styling -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Simple header */
+        .header {
+            padding: 30px 0;
+            border-bottom: 1px solid #e0e0e0;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 300;
+            color: #000;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+        
+        /* Buttons - simple and clean */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: #000;
+            color: #fff;
+            text-decoration: none;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+            color: #fff;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #000;
+        }
+        
+        .btn-secondary:hover {
+            color: #000;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: #fff;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        /* Cards - minimal design */
+        .card {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+        
+        /* Forms - simple and clean */
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #000;
+        }
+        
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="datetime-local"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #000;
+        }
+        
+        /* Tables - clean and minimal */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 2px solid #e0e0e0;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        td {
+            padding: 16px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        /* Status indicators */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-completed {
+            background: #e0e0e0;
+            color: #616161;
+        }
+        
+        /* Messages */
+        .message {
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .message-success {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .message-error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .message-info {
+            background: #f5f5f5;
+            color: #000;
+        }
+        
+        /* Navigation */
+        .nav {
+            display: flex;
+            gap: 24px;
+            margin-top: 20px;
+        }
+        
+        .nav-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 15px;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-link:hover,
+        .nav-link.active {
+            color: #000;
+        }
+        
+        /* Utility classes */
+        .text-muted {
+            color: #666;
+        }
+        
+        .text-small {
+            font-size: 14px;
+        }
+        
+        .mt-20 { margin-top: 20px; }
+        .mt-40 { margin-top: 40px; }
+        .mb-20 { margin-bottom: 20px; }
+        .mb-40 { margin-bottom: 40px; }
+        
+        .flex {
+            display: flex;
+            align-items: center;
+        }
+        
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .gap-10 { gap: 10px; }
+        .gap-20 { gap: 20px; }
+        
+        /* Loading state */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f0f0f0;
+            border-top-color: #000;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .header {
+                padding: 20px 0;
+            }
+            
+            .flex-between {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+        }
+    </style>
     
-    <!-- CSS -->
-    <link href="{% load static %}{% static 'css/app.css' %}" rel="stylesheet">
-    
-    {% block extra_head %}{% endblock %}
+    {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div id="app">
+<body>
+    <div class="container">
         {% block content %}{% endblock %}
     </div>
     

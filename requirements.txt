@@ -14,8 +14,9 @@ redis>=4.5.0
 # Database
 psycopg2-binary>=2.9.0
 
-# Audio Processing - Using OpenAI API instead of local Whisper
-openai>=1.0.0  # For API-based transcription (lightweight)
+# Audio Processing - Using Deepgram for transcription with speaker diarization
+deepgram-sdk>=4.8.0  # Transcription service with speaker identification
+# Note: Add openai>=1.0.0 later if needed for GPT-4 summaries
 
 # Email Service
 sendgrid>=6.12.0
