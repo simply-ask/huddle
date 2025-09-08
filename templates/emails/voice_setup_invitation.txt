@@ -1,35 +1,35 @@
-Voice Setup Required - {{ meeting.title|default:"Meeting" }}
+HUDDLE - Voice Setup Required
 
 Hi {{ recipient_name }},
 
-{{ host_name }} has invited you to an upcoming meeting and requested that you set up your voice profile for accurate speaker identification during the session.
+{{ host_name }} has invited you to a meeting and requested that you set up your voice profile. This quick setup helps our AI accurately identify speakers during the session.
 
-MEETING DETAILS:
-- Title: {{ meeting.title|default:"Upcoming Meeting" }}
-- Meeting ID: {{ meeting.meeting_id }}
-- Host: {{ host_name }}
-{% if meeting.started_at %}- Scheduled: {{ meeting.started_at|date:"F j, Y at g:i A" }}{% endif %}
+MEETING DETAILS
+================
+Title: {{ meeting.title|default:"Team Meeting" }}
+Meeting ID: {{ meeting.meeting_id }}
+Host: {{ host_name }}
+{% if meeting.started_at %}Scheduled: {{ meeting.started_at|date:"F j, Y at g:i A" }}{% endif %}
 
-COMPLETE VOICE SETUP:
+SETUP LINK
+==========
 {{ setup_url }}
 
-WHAT IS VOICE SETUP?
-Voice setup helps our AI accurately identify who's speaking during the meeting. You'll need to:
-1. Record a 10-15 second voice sample using your normal speaking voice
-2. Provide your name and job title
-3. Save your voice profile for future meetings
+QUICK & EASY SETUP
+==================
+1. Record Your Voice - Speak naturally for 10-15 seconds
+2. Confirm Details - Verify your name and role  
+3. Save Profile - Your voice profile works for all future meetings
 
-This takes less than 2 minutes and greatly improves meeting transcription accuracy!
+IMPORTANT: This setup link expires in {{ expires_days }} days for security. Please complete your setup soon.
 
-IMPORTANT: This setup link will expire in {{ expires_days }} days for security purposes. Please complete your voice setup soon.
+Questions? Contact {{ host_name }} directly or reply to this email.
 
-If you have any questions about voice setup or the meeting, please contact {{ host_name }} directly.
-
-Thanks,
+Best regards,
 The {{ site_name }} Team
 
 ---
-{{ site_name }} - Meeting Intelligence Platform
-
-If the link above doesn't work, copy and paste this URL into your browser:
-{{ setup_url }}
+© {{ site_name }} - Making meetings more productive
+Visit: {{ site_url }}
+Privacy: {{ site_url }}/privacy
+Help: {{ site_url }}/help

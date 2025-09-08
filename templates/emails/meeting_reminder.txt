@@ -1,0 +1,29 @@
+HUDDLE - Meeting Reminder
+
+REMINDER: Meeting starting in {{ hours_before }} hours!
+
+This is a friendly reminder about your upcoming meeting with {{ host_name }}.
+
+MEETING DETAILS
+================
+Title: {{ meeting.title|default:"Team Meeting" }}
+Meeting ID: {{ meeting.meeting_id }}
+Host: {{ host_name }}
+{% if meeting.started_at %}Starts: {{ meeting.started_at|date:"F j, Y at g:i A" }}{% endif %}
+
+JOIN MEETING
+============
+{{ meeting_url }}
+
+Don't forget to join on time!
+
+Questions? Contact {{ host_name }} directly or reply to this email.
+
+Best regards,
+The {{ site_name }} Team
+
+---
+© {{ site_name }} - Making meetings more productive
+Visit: {{ site_url }}
+Privacy: {{ site_url }}/privacy
+Help: {{ site_url }}/help

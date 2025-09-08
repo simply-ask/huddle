@@ -3,156 +3,196 @@
 
 {% block title %}Voice Setup - {{ meeting.title|default:meeting.meeting_id }}{% endblock %}
 
-{% block extra_head %}
+{% block extra_css %}
 <style>
-    .voice-setup {
+    /* Override base styles for light theme on this page */
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+    }
+    
+    .voice-setup-container {
         max-width: 600px;
         margin: 0 auto;
         padding: 40px 20px;
     }
-    .setup-header {
-        text-align: center;
-        margin-bottom: 40px;
-    }
-    .meeting-info {
-        background: #f9f9f9;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 30px;
-    }
-    .form-group {
-        margin-bottom: 25px;
-    }
-    .form-group label {
-        display: block;
-        margin-bottom: 8px;
-        font-weight: bold;
-        color: #333;
-    }
-    .form-control {
-        width: 100%;
-        padding: 12px;
-        border: 2px solid #ddd;
-        border-radius: 6px;
-        font-size: 16px;
-        box-sizing: border-box;
-    }
-    .form-control:focus {
-        outline: none;
-        border-color: #4CAF50;
-    }
+    
+    /* Recording area styles */
     .voice-recording {
-        background: #f8f9fa;
-        border: 2px dashed #dee2e6;
-        border-radius: 8px;
-        padding: 30px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px dashed rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        padding: 32px;
         text-align: center;
-        margin: 20px 0;
+        transition: all 0.3s ease;
     }
+    
     .voice-recording.recording {
+        background: rgba(220, 53, 69, 0.15);
         border-color: #dc3545;
-        background: #f8d7da;
+        animation: pulse-border 2s infinite;
     }
-    .record-btn {
-        background: #4CAF50;
-        color: white;
-        border: none;
-        padding: 15px 30px;
+    
+    @keyframes pulse-border {
+        0% { border-color: rgba(220, 53, 69, 0.5); }
+        50% { border-color: rgba(220, 53, 69, 1); }
+        100% { border-color: rgba(220, 53, 69, 0.5); }
+    }
+    
+    .voice-recording h4 {
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 16px;
+        color: #fff;
+    }
+    
+    .voice-recording p {
+        color: rgba(255, 255, 255, 0.8);
+        margin-bottom: 24px;
+    }
+    
+    .voice-recording em {
+        display: block;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 12px;
+        border-radius: 6px;
+        margin: 16px 0;
+        font-style: normal;
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    /* Recording timer */
+    #recordingTimer {
+        font-size: 24px;
+        font-weight: 300;
+        margin-top: 16px;
+        color: #fff;
+        font-variant-numeric: tabular-nums;
+    }
+    
+    /* Audio preview */
+    .audio-preview {
+        width: 100%;
+        margin: 16px 0;
+        filter: invert(1) brightness(0.9);
+    }
+    
+    /* Instructions card */
+    .instructions-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .instructions-card h3 {
         font-size: 16px;
-        cursor: pointer;
-        margin: 10px;
-        transition: all 0.3s;
+        font-weight: 500;
+        margin-bottom: 12px;
+        color: #fff;
     }
-    .record-btn:hover {
-        background: #45a049;
+    
+    .instructions-card ul {
+        list-style: none;
+        padding: 0;
     }
-    .record-btn:disabled {
-        background: #ccc;
-        cursor: not-allowed;
+    
+    .instructions-card li {
+        padding: 8px 0;
+        color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
-    .stop-btn {
+    
+    .instructions-card li:before {
+        content: "✓";
+        color: #64a93f;
+        font-weight: bold;
+    }
+    
+    /* Custom button styles for recording */
+    .btn-record {
         background: #dc3545;
+        min-width: 180px;
     }
-    .stop-btn:hover {
+    
+    .btn-record:hover {
         background: #c82333;
     }
-    .submit-btn {
-        background: #007bff;
-        color: white;
-        border: none;
-        padding: 15px 30px;
-        border-radius: 8px;
-        font-size: 18px;
-        cursor: pointer;
-        width: 100%;
-        margin-top: 20px;
+    
+    .btn-rerecord {
+        background: rgba(255, 255, 255, 0.2);
     }
-    .submit-btn:hover {
-        background: #0056b3;
+    
+    .btn-rerecord:hover {
+        background: rgba(255, 255, 255, 0.3);
     }
-    .submit-btn:disabled {
-        background: #ccc;
-        cursor: not-allowed;
-    }
-    .recording-status {
-        margin-top: 15px;
-        font-weight: bold;
-    }
-    .recording-status.recording {
-        color: #dc3545;
-    }
-    .recording-status.completed {
-        color: #28a745;
-    }
-    .audio-preview {
-        margin-top: 15px;
-    }
-    .instructions {
-        background: #e3f2fd;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 30px;
-    }
-    .instructions h3 {
-        color: #1976d2;
-        margin-top: 0;
-    }
-    .error-message {
-        background: #f8d7da;
-        color: #721c24;
-        padding: 15px;
+    
+    /* Error message styling */
+    .error-alert {
+        background: rgba(220, 53, 69, 0.9);
+        color: #fff;
+        padding: 16px;
         border-radius: 6px;
         margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="voice-setup">
-    <div class="setup-header">
-        <h1>🎤 Voice Setup</h1>
-        <p>Set up your voice profile for accurate speaker identification</p>
+<div class="voice-setup-container">
+    <!-- Header -->
+    <div class="mb-40">
+        <h1 style="font-size: 32px; font-weight: 300; margin-bottom: 8px;">Voice Setup</h1>
+        <p class="text-muted">Create your voice profile for speaker identification</p>
     </div>
 
-    <div class="meeting-info">
-        <h3>{{ meeting.title|default:"Upcoming Meeting" }}</h3>
-        <p><strong>Meeting ID:</strong> {{ meeting.meeting_id }}</p>
-        <p><strong>Host:</strong> {{ meeting.host.get_full_name|default:meeting.host.username|default:"Host" }}</p>
-        <p><strong>Your Email:</strong> {{ email }}</p>
+    <!-- Meeting info card -->
+    <div class="card">
+        <div class="flex-between mb-20">
+            <h3 style="font-size: 18px; font-weight: 500;">{{ meeting.title|default:"Upcoming Meeting" }}</h3>
+            <span class="status status-active">
+                <i class="fas fa-video"></i>
+                Ready
+            </span>
+        </div>
+        <div class="flex gap-20" style="flex-wrap: wrap;">
+            <div>
+                <div class="text-small text-muted">Meeting ID</div>
+                <div style="font-weight: 500;">{{ meeting.meeting_id }}</div>
+            </div>
+            <div>
+                <div class="text-small text-muted">Host</div>
+                <div style="font-weight: 500;">{{ meeting.host.get_full_name|default:meeting.host.username|default:"Host" }}</div>
+            </div>
+            <div>
+                <div class="text-small text-muted">Your Email</div>
+                <div style="font-weight: 500;">{{ email }}</div>
+            </div>
+        </div>
     </div>
 
-    <div class="instructions">
-        <h3>📝 Instructions</h3>
+    <!-- Instructions -->
+    <div class="instructions-card">
+        <h3><i class="fas fa-info-circle"></i> Quick Setup Guide</h3>
         <ul>
-            <li>Please record a 10-15 second audio sample</li>
-            <li>Speak clearly and naturally - introduce yourself or read the suggested text</li>
-            <li>Ensure you're in a quiet environment</li>
-            <li>This voice profile will be saved for future meetings</li>
+            <li>Record a 10-15 second voice sample</li>
+            <li>Speak naturally and clearly</li>
+            <li>Find a quiet environment</li>
+            <li>Your profile works for all future meetings</li>
         </ul>
     </div>
 
-    <div id="errorMessage" class="error-message" style="display: none;"></div>
+    <div id="errorMessage" class="error-alert" style="display: none;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span></span>
+    </div>
 
     <form id="voiceSetupForm" method="post" action="/meet/{{ meeting.meeting_id }}/voice-setup-process/" enctype="multipart/form-data">
         {% csrf_token %}
@@ -160,51 +200,55 @@
         <input type="hidden" name="token" value="{{ token }}">
         
         <div class="form-group">
-            <label for="full_name">Full Name *</label>
-            <input type="text" id="full_name" name="full_name" class="form-control" 
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" name="full_name" 
                    value="{{ suggested_name }}" required>
         </div>
 
         <div class="form-group">
-            <label for="job_title">Job Title (Optional)</label>
-            <input type="text" id="job_title" name="job_title" class="form-control" 
+            <label for="job_title">Job Title <span class="text-muted text-small">(Optional)</span></label>
+            <input type="text" id="job_title" name="job_title" 
                    placeholder="e.g., Software Engineer, Product Manager">
         </div>
 
         <div class="form-group">
-            <label>Voice Sample *</label>
+            <label>Voice Sample</label>
             <div class="voice-recording" id="recordingArea">
                 <div id="recordingInstructions">
-                    <h4>🎙️ Record Your Voice</h4>
-                    <p>Please say: <em>"Hello, my name is {{ suggested_name }}. I'm joining the meeting and look forward to our discussion."</em></p>
-                    <button type="button" id="startRecordBtn" class="record-btn">
-                        🔴 Start Recording
+                    <h4><i class="fas fa-microphone"></i> Record Your Voice</h4>
+                    <p>Please say:</p>
+                    <em>"Hello, my name is {{ suggested_name }}. I'm joining the meeting and look forward to our discussion."</em>
+                    <button type="button" id="startRecordBtn" class="btn btn-record">
+                        <i class="fas fa-circle"></i>
+                        Start Recording
                     </button>
                 </div>
                 
                 <div id="recordingActive" style="display: none;">
-                    <h4>🔴 Recording...</h4>
+                    <h4><i class="fas fa-circle" style="color: #dc3545;"></i> Recording in Progress</h4>
                     <p>Speak clearly into your microphone</p>
-                    <button type="button" id="stopRecordBtn" class="record-btn stop-btn">
-                        ⏹️ Stop Recording
-                    </button>
                     <div id="recordingTimer">00:00</div>
+                    <button type="button" id="stopRecordBtn" class="btn">
+                        <i class="fas fa-stop"></i>
+                        Stop Recording
+                    </button>
                 </div>
                 
                 <div id="recordingComplete" style="display: none;">
-                    <h4>✅ Recording Complete</h4>
+                    <h4><i class="fas fa-check-circle" style="color: #64a93f;"></i> Recording Complete</h4>
                     <audio id="audioPreview" controls class="audio-preview"></audio>
-                    <br>
-                    <button type="button" id="reRecordBtn" class="record-btn">
-                        🔄 Record Again
+                    <button type="button" id="reRecordBtn" class="btn btn-rerecord">
+                        <i class="fas fa-redo"></i>
+                        Record Again
                     </button>
                 </div>
             </div>
             <input type="file" id="voice_sample" name="voice_sample" style="display: none;" accept="audio/*">
         </div>
 
-        <button type="submit" id="submitBtn" class="submit-btn" disabled>
-            🚀 Complete Voice Setup
+        <button type="submit" id="submitBtn" class="btn" disabled style="width: 100%;">
+            <i class="fas fa-check"></i>
+            Complete Setup
         </button>
     </form>
 </div>
@@ -339,8 +383,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function showError(message) {
-        errorDiv.textContent = message;
-        errorDiv.style.display = 'block';
+        errorDiv.querySelector('span').textContent = message;
+        errorDiv.style.display = 'flex';
         setTimeout(() => {
             errorDiv.style.display = 'none';
         }, 5000);
@@ -363,7 +407,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Setting up your profile...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Setting up your profile...';
         
         try {
             const formData = new FormData(form);
@@ -383,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 showError(result.error || 'An error occurred. Please try again.');
                 submitBtn.disabled = false;
-                submitBtn.textContent = '🚀 Complete Voice Setup';
+                submitBtn.innerHTML = '<i class="fas fa-check"></i> Complete Setup';
             }
             
         } catch (error) {

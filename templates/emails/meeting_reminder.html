@@ -3,18 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice Setup for {{ meeting.title|default:"Meeting" }}</title>
+    <title>Meeting Reminder - {{ meeting.title|default:"Meeting" }}</title>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!--[if mso]>
-    <noscript>
-        <xml>
-            <o:OfficeDocumentSettings>
-                <o:PixelsPerInch>96</o:PixelsPerInch>
-            </o:OfficeDocumentSettings>
-        </xml>
-    </noscript>
-    <![endif]-->
     <style>
         /* Reset styles */
         body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
@@ -29,16 +20,14 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         }
         
-        /* Container styles */
         .email-container {
             max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
         }
         
-        /* Header styles */
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
             padding: 48px 40px;
             text-align: center;
         }
@@ -57,7 +46,6 @@
             margin: 0;
         }
         
-        /* Content styles */
         .content {
             padding: 40px;
         }
@@ -75,7 +63,6 @@
             margin: 0 0 32px 0;
         }
         
-        /* Card styles */
         .info-card {
             background: #f8f9fa;
             border-radius: 12px;
@@ -113,7 +100,6 @@
             font-weight: 500;
         }
         
-        /* Button styles */
         .button-container {
             text-align: center;
             margin: 40px 0;
@@ -122,7 +108,7 @@
         .button {
             display: inline-block;
             padding: 16px 48px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
             color: #ffffff !important;
             text-decoration: none !important;
             border-radius: 8px;
@@ -136,73 +122,28 @@
             transform: translateY(-2px);
         }
         
-        /* Steps section */
-        .steps {
-            margin: 32px 0;
-        }
-        
-        .step {
-            display: flex;
-            align-items: flex-start;
-            margin: 20px 0;
-        }
-        
-        .step-number {
-            flex-shrink: 0;
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #ffffff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 600;
-            margin-right: 16px;
-        }
-        
-        .step-content {
-            flex: 1;
-        }
-        
-        .step-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #2d3748;
-            margin: 0 0 4px 0;
-        }
-        
-        .step-description {
-            font-size: 14px;
-            color: #718096;
-            margin: 0;
-            line-height: 1.5;
-        }
-        
-        /* Alert styles */
-        .alert {
-            background: #fef5e7;
+        .urgent-alert {
+            background: #fff3cd;
             border-left: 4px solid #f39c12;
             border-radius: 6px;
-            padding: 16px;
+            padding: 20px;
             margin: 24px 0;
+            text-align: center;
         }
         
-        .alert-title {
-            font-size: 14px;
+        .urgent-title {
+            font-size: 18px;
             font-weight: 600;
             color: #e67e22;
-            margin: 0 0 4px 0;
+            margin: 0 0 8px 0;
         }
         
-        .alert-text {
-            font-size: 14px;
+        .urgent-text {
+            font-size: 16px;
             color: #d68910;
             margin: 0;
         }
         
-        /* Footer styles */
         .footer {
             background: #f8f9fa;
             padding: 32px 40px;
@@ -218,12 +159,8 @@
         }
         
         .footer-link {
-            color: #667eea !important;
+            color: #f39c12 !important;
             text-decoration: none !important;
-        }
-        
-        .footer-link:hover {
-            text-decoration: underline !important;
         }
         
         .footer-divider {
@@ -233,53 +170,15 @@
             background: #cbd5e0;
         }
         
-        .social-links {
-            margin: 16px 0;
-        }
-        
-        .social-link {
-            display: inline-block;
-            margin: 0 8px;
-            color: #718096 !important;
-            text-decoration: none !important;
-        }
-        
-        /* Mobile styles */
         @media screen and (max-width: 600px) {
-            .email-container {
-                width: 100% !important;
-            }
-            
-            .header {
-                padding: 32px 24px !important;
-            }
-            
-            .content {
-                padding: 24px !important;
-            }
-            
-            .footer {
-                padding: 24px !important;
-            }
-            
-            .button {
-                padding: 14px 32px !important;
-                font-size: 15px !important;
-            }
-            
-            .info-row {
-                display: block !important;
-            }
-            
-            .info-label,
-            .info-value {
-                display: block !important;
-                width: 100% !important;
-            }
-            
-            .info-label {
-                margin-bottom: 4px !important;
-            }
+            .email-container { width: 100% !important; }
+            .header { padding: 32px 24px !important; }
+            .content { padding: 24px !important; }
+            .footer { padding: 24px !important; }
+            .button { padding: 14px 32px !important; font-size: 15px !important; }
+            .info-row { display: block !important; }
+            .info-label, .info-value { display: block !important; width: 100% !important; }
+            .info-label { margin-bottom: 4px !important; }
         }
     </style>
 </head>
@@ -293,11 +192,16 @@
         
         <!-- Main Content -->
         <div class="content">
-            <h2 class="greeting">Hi {{ recipient_name }},</h2>
+            <h2 class="greeting">Meeting starting soon!</h2>
+            
+            <!-- Urgent Alert -->
+            <div class="urgent-alert">
+                <h3 class="urgent-title"><i class="fas fa-clock"></i> Your meeting starts in {{ hours_before }} hours</h3>
+                <p class="urgent-text">Don't forget to join on time</p>
+            </div>
             
             <p class="message">
-                {{ host_name }} has invited you to a meeting and requested that you set up your voice profile. 
-                This quick setup helps our AI accurately identify speakers during the session.
+                This is a friendly reminder about your upcoming meeting with {{ host_name }}.
             </p>
             
             <!-- Meeting Details Card -->
@@ -321,7 +225,7 @@
                 
                 {% if meeting.started_at %}
                 <div class="info-row">
-                    <span class="info-label">Scheduled</span>
+                    <span class="info-label">Starts</span>
                     <span class="info-value">{{ meeting.started_at|date:"F j, Y at g:i A" }}</span>
                 </div>
                 {% endif %}
@@ -329,42 +233,7 @@
             
             <!-- CTA Button -->
             <div class="button-container">
-                <a href="{{ setup_url }}" class="button">Set Up Voice Profile</a>
-            </div>
-            
-            <!-- Steps Section -->
-            <div class="steps">
-                <h3 style="font-size: 16px; color: #2d3748; margin: 0 0 20px 0;">Quick & Easy Setup</h3>
-                
-                <div class="step">
-                    <div class="step-number">1</div>
-                    <div class="step-content">
-                        <h4 class="step-title">Record Your Voice</h4>
-                        <p class="step-description">Speak naturally for 10-15 seconds</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">2</div>
-                    <div class="step-content">
-                        <h4 class="step-title">Confirm Details</h4>
-                        <p class="step-description">Verify your name and role</p>
-                    </div>
-                </div>
-                
-                <div class="step">
-                    <div class="step-number">3</div>
-                    <div class="step-content">
-                        <h4 class="step-title">Save Profile</h4>
-                        <p class="step-description">Your voice profile works for all future meetings</p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Alert -->
-            <div class="alert">
-                <h4 class="alert-title"><i class="fas fa-clock"></i> Link Expires Soon</h4>
-                <p class="alert-text">This setup link expires in {{ expires_days }} days for security. Please complete your setup soon.</p>
+                <a href="{{ meeting_url }}" class="button">Join Meeting</a>
             </div>
             
             <p class="message" style="margin-top: 32px; margin-bottom: 0;">
@@ -382,7 +251,7 @@
             
             <p class="footer-text" style="font-size: 12px;">
                 Having trouble with the button? Copy and paste this link:<br>
-                <a href="{{ setup_url }}" class="footer-link" style="word-break: break-all; font-size: 11px;">{{ setup_url }}</a>
+                <a href="{{ meeting_url }}" class="footer-link" style="word-break: break-all; font-size: 11px;">{{ meeting_url }}</a>
             </p>
             
             <p class="footer-text" style="font-size: 12px; margin-top: 16px;">

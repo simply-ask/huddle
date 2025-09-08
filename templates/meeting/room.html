@@ -3,249 +3,484 @@
 
 {% block title %}Meeting: {{ meeting.title|default:meeting.meeting_id }}{% endblock %}
 
-{% block extra_head %}
+{% block extra_css %}
 <style>
-    .meeting-room {
+    /* Meeting room styles - clean Toaster UI */
+    .meeting-container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 20px;
+        padding-bottom: 100px; /* Space for fixed controls */
     }
-    .participants-section {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin: 20px 0;
-        padding: 20px;
-        background: #f9f9f9;
-        border-radius: 8px;
+    
+    /* Header section */
+    .meeting-header {
+        margin-bottom: 32px;
     }
-    .host-info {
-        display: flex;
-        align-items: center;
-        gap: 10px;
+    
+    .meeting-title {
+        font-size: 28px;
+        font-weight: 300;
+        margin-bottom: 8px;
     }
-    .host-badge {
-        background: #4CAF50;
-        color: white;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: bold;
-    }
-    .recording-phone {
-        font-size: 24px;
-        margin-right: 10px;
-    }
-    .participants-count {
-        font-size: 14px;
-        color: #666;
-    }
-    .role-indicator {
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-weight: bold;
-        margin-left: 10px;
-    }
-    .role-host {
-        background: #4CAF50;
-        color: white;
-    }
-    .role-participant {
-        background: #2196F3;
-        color: white;
-    }
-    .controls {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: white;
-        border-top: 1px solid #ddd;
-        padding: 20px;
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-    }
-    .btn {
-        padding: 12px 24px;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-    .btn-record {
-        background: #4CAF50;
-        color: white;
-    }
-    .btn-record:hover {
-        background: #45a049;
-    }
-    .btn-stop {
-        background: #f44336;
-        color: white;
-    }
-    .btn-leave {
-        background: #9E9E9E;
-        color: white;
-    }
+    
+    /* Recording indicator */
     .recording-indicator {
         position: fixed;
         top: 20px;
         right: 20px;
-        background: #f44336;
+        background: #dc3545;
         color: white;
-        padding: 10px 20px;
-        border-radius: 20px;
+        padding: 12px 20px;
+        border-radius: 24px;
         display: none;
         align-items: center;
         gap: 10px;
+        z-index: 1000;
+        animation: fadeIn 0.3s ease;
     }
+    
     .recording-indicator.active {
         display: flex;
     }
-    .pulse {
+    
+    .recording-dot {
         width: 10px;
         height: 10px;
         background: white;
         border-radius: 50%;
         animation: pulse 1.5s infinite;
     }
+    
     @keyframes pulse {
-        0% { opacity: 1; }
+        0%, 100% { opacity: 1; }
         50% { opacity: 0.3; }
-        100% { opacity: 1; }
     }
-    .transcript-container {
-        background: #f9f9f9;
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Participants section */
+    .participants-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 8px;
-        padding: 20px;
+        padding: 24px;
+        margin-bottom: 24px;
+        backdrop-filter: blur(10px);
+    }
+    
+    .host-info {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .host-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(100, 169, 63, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    
+    .host-badge {
+        background: #64a93f;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Speaker management */
+    .speaker-management {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 24px;
+        display: none;
+    }
+    
+    .speaker-management.visible {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .speaker-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
         margin: 20px 0;
-        max-height: 300px;
+    }
+    
+    .speaker-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s;
+    }
+    
+    .speaker-card:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateY(-1px);
+    }
+    
+    .speaker-card.verified {
+        border-color: #64a93f;
+        background: rgba(100, 169, 63, 0.1);
+    }
+    
+    .speaker-card.unknown {
+        border-color: #ffc107;
+        background: rgba(255, 193, 7, 0.1);
+    }
+    
+    .speaker-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .speaker-confidence {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .edit-speaker-btn {
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.7);
+        cursor: pointer;
+        padding: 4px;
+        transition: color 0.2s;
+    }
+    
+    .edit-speaker-btn:hover {
+        color: #fff;
+    }
+    
+    /* Transcript section */
+    .transcript-container {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 24px;
+        margin-bottom: 24px;
+        max-height: 400px;
         overflow-y: auto;
     }
+    
+    .transcript-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .transcript-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+    }
+    
+    .transcript-container::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+    }
+    
+    .transcript-container::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+    
+    .transcript-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .transcript-title {
+        font-size: 18px;
+        font-weight: 500;
+    }
+    
+    .transcript-status {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
     .transcript-segment {
-        margin: 10px 0;
-        padding: 10px;
-        background: white;
+        margin: 16px 0;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border-left: 3px solid rgba(255, 255, 255, 0.1);
         border-radius: 4px;
-        position: relative;
+        transition: all 0.2s;
     }
+    
+    .transcript-segment:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-left-color: #64a93f;
+    }
+    
     .speaker-label {
-        font-weight: bold;
-        color: #333;
-        margin-bottom: 5px;
+        font-weight: 500;
+        margin-bottom: 8px;
         display: flex;
         align-items: center;
-        gap: 10px;
-    }
-    .unknown-speaker {
-        color: #ff6b6b;
-    }
-    .speaker-edit-btn {
-        background: #ffc107;
-        color: #212529;
-        border: none;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        cursor: pointer;
-    }
-    .speaker-dropdown {
-        background: white;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        padding: 5px;
-        font-size: 12px;
-        margin-left: 5px;
-    }
-    .speaker-management {
-        background: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        margin: 20px 0;
-    }
-    .active-speakers {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin: 15px 0;
-    }
-    .speaker-tag {
-        background: #e9ecef;
-        padding: 5px 12px;
-        border-radius: 20px;
+        gap: 8px;
         font-size: 14px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
     }
-    .speaker-tag.active {
-        background: #28a745;
+    
+    .speaker-label.unknown {
+        color: #ffc107;
+    }
+    
+    .transcript-text {
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.6;
+    }
+    
+    .speaker-dropdown {
+        background: rgba(255, 255, 255, 0.9);
+        color: #0a2134;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 13px;
+        margin-left: 8px;
+    }
+    
+    /* Fixed controls bar */
+    .controls-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(10, 33, 52, 0.95);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 20px;
+        z-index: 999;
+    }
+    
+    .controls-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    .control-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
         color: white;
     }
-    .speaker-tag.unknown {
-        background: #ffc107;
-        color: #212529;
+    
+    .control-btn-record {
+        background: #dc3545;
+    }
+    
+    .control-btn-record:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+    }
+    
+    .control-btn-stop {
+        background: #64a93f;
+    }
+    
+    .control-btn-stop:hover {
+        background: #548832;
+        transform: translateY(-1px);
+    }
+    
+    .control-btn-leave {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .control-btn-leave:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .control-btn-end {
+        background: rgba(220, 53, 69, 0.2);
+        border: 1px solid #dc3545;
+        color: #ff6b6b;
+    }
+    
+    .control-btn-end:hover {
+        background: rgba(220, 53, 69, 0.3);
+    }
+    
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+    
+    /* Role badge */
+    .role-badge {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .role-badge.host {
+        background: #64a93f;
+        color: white;
+    }
+    
+    .role-badge.participant {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+        .meeting-container {
+            padding-bottom: 120px;
+        }
+        
+        .controls-container {
+            flex-wrap: wrap;
+        }
+        
+        .speaker-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="meeting-room">
+<div class="meeting-container">
+    <!-- Role indicator -->
+    <div class="role-badge {{ user.id == meeting.host.id|yesno:'host,participant' }}" id="roleBadge">
+        <i class="fas fa-{{ user.id == meeting.host.id|yesno:'crown,eye' }}"></i>
+        {{ user.id == meeting.host.id|yesno:'Host,Viewer' }}
+    </div>
+    
+    <!-- Recording indicator -->
     <div class="recording-indicator" id="recordingIndicator">
-        <div class="pulse"></div>
+        <div class="recording-dot"></div>
         <span>Recording</span>
     </div>
-
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <div>
-            <h1>{{ meeting.title|default:"Meeting" }}</h1>
-            <p>Meeting ID: <strong>{{ meeting.meeting_id }}</strong></p>
+    
+    <!-- Meeting header -->
+    <div class="meeting-header">
+        <h1 class="meeting-title">{{ meeting.title|default:"Meeting" }}</h1>
+        <div class="text-muted">
+            <i class="fas fa-hashtag"></i>
+            Meeting ID: {{ meeting.meeting_id }}
         </div>
-        <div id="userRole" class="role-indicator"></div>
     </div>
-
-    <div class="participants-section">
-        <div class="host-info">
-            <span class="recording-phone">📱</span>
-            <div>
-                <div><strong id="hostName">{{ meeting.host.get_full_name|default:meeting.host.username|default:"Host" }}</strong> 
-                <span class="host-badge">HOST</span></div>
-                <div class="participants-count">Recording Phone</div>
+    
+    <!-- Participants section -->
+    <div class="participants-card">
+        <div class="flex-between">
+            <div class="host-info">
+                <div class="host-icon">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div>
+                    <div class="flex gap-10">
+                        <strong>{{ meeting.host.get_full_name|default:meeting.host.username }}</strong>
+                        <span class="host-badge">Host</span>
+                    </div>
+                    <div class="text-small text-muted">Recording Device</div>
+                </div>
+            </div>
+            <div class="text-muted">
+                <i class="fas fa-users"></i>
+                <span id="participantCount">0</span> viewing
             </div>
         </div>
-        <div>
-            <span id="participantCount">0</span> participant(s) viewing
+    </div>
+    
+    <!-- Speaker management (host only) -->
+    <div class="speaker-management" id="speakerManagement">
+        <div class="flex-between mb-20">
+            <div>
+                <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 4px;">
+                    <i class="fas fa-users"></i> Active Speakers
+                </h3>
+                <div class="text-small text-muted">Manage speaker identification</div>
+            </div>
+            <div class="flex gap-10">
+                <button class="btn btn-small btn-secondary" id="addSpeakerBtn">
+                    <i class="fas fa-plus"></i>
+                    Add
+                </button>
+                <button class="btn btn-small btn-secondary" id="refreshSpeakersBtn">
+                    <i class="fas fa-sync"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+        
+        <div class="speaker-grid" id="activeSpeakers">
+            <!-- Speaker cards will be populated dynamically -->
         </div>
     </div>
-
-    <div class="speaker-management" id="speakerManagement" style="display: none;">
-        <h3>👥 Active Speakers</h3>
-        <p style="color: #666; margin-bottom: 15px;">Manage speaker identification during the meeting</p>
-        
-        <div class="active-speakers" id="activeSpeakers">
-            <!-- Speaker tags will be populated dynamically -->
+    
+    <!-- Transcript section -->
+    <div class="transcript-container">
+        <div class="transcript-header">
+            <h3 class="transcript-title">
+                <i class="fas fa-closed-captioning"></i>
+                Live Transcript
+            </h3>
+            <div class="transcript-status" id="transcriptStatus">
+                Waiting to start...
+            </div>
         </div>
         
-        <div style="margin-top: 15px;">
-            <button id="addSpeakerBtn" class="btn" style="background: #28a745; color: white; padding: 8px 16px;">
-                ➕ Add Speaker
-            </button>
-            <button id="refreshSpeakersBtn" class="btn" style="background: #6c757d; color: white; padding: 8px 16px; margin-left: 10px;">
-                🔄 Refresh
-            </button>
-        </div>
-    </div>
-
-    <div class="transcript-container" id="transcriptContainer">
-        <h3>Live Transcript</h3>
         <div id="transcriptContent">
-            <p style="color: #999;">Transcript will appear here when recording starts...</p>
+            <div class="empty-state">
+                <i class="fas fa-microphone-slash"></i>
+                <p>Transcript will appear here when recording starts</p>
+            </div>
         </div>
     </div>
+</div>
 
-    <div class="controls" id="controlsSection">
+<!-- Fixed controls bar -->
+<div class="controls-bar">
+    <div class="controls-container" id="controlsContainer">
         <!-- Controls will be added dynamically based on user role -->
     </div>
 </div>
@@ -259,11 +494,10 @@
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
-    let userRole = null; // 'host' or 'participant'
-    let isHost = {{ meeting.host.id|default:'null' }} === {{ user.id|default:'null' }};
+    let isHost = {{ user.id == meeting.host.id|yesno:'true,false' }};
     let participantCount = 0;
-    let activeSpeakers = new Map(); // speaker_id -> {name, confidence, last_seen}
-    let knownSpeakers = new Map(); // email -> speaker_profile
+    let activeSpeakers = new Map();
+    let knownSpeakers = new Map();
     let transcriptSegments = [];
 
     // Initialize WebSocket connection
@@ -272,15 +506,15 @@
         
         socket.onopen = function(e) {
             console.log('WebSocket connected');
-            userRole = isHost ? 'host' : 'participant';
-            updateUI();
             
             socket.send(JSON.stringify({
                 'type': 'join',
                 'meeting_id': meetingId,
-                'role': userRole,
+                'role': isHost ? 'host' : 'participant',
                 'device_type': detectDeviceType()
             }));
+            
+            updateUI();
         };
         
         socket.onmessage = function(e) {
@@ -290,7 +524,7 @@
         
         socket.onclose = function(e) {
             console.log('WebSocket disconnected');
-            setTimeout(connectWebSocket, 3000); // Reconnect after 3 seconds
+            setTimeout(connectWebSocket, 3000);
         };
         
         socket.onerror = function(e) {
@@ -333,46 +567,41 @@
 
     // Update UI based on user role
     function updateUI() {
-        const roleElement = document.getElementById('userRole');
-        const controlsSection = document.getElementById('controlsSection');
+        const controlsContainer = document.getElementById('controlsContainer');
         
-        if (userRole === 'host') {
-            roleElement.textContent = 'HOST';
-            roleElement.className = 'role-indicator role-host';
-            
-            // Add host controls
-            controlsSection.innerHTML = `
-                <button id="startRecordingBtn" class="btn btn-record">
-                    📱 Start Recording
+        if (isHost) {
+            controlsContainer.innerHTML = `
+                <button id="startRecordingBtn" class="control-btn control-btn-record">
+                    <i class="fas fa-circle"></i>
+                    Start Recording
                 </button>
-                <button id="stopRecordingBtn" class="btn btn-stop" style="display: none;">
-                    ⏹️ Stop Recording
+                <button id="stopRecordingBtn" class="control-btn control-btn-stop" style="display: none;">
+                    <i class="fas fa-stop"></i>
+                    Stop Recording
                 </button>
-                <button id="leaveMeetingBtn" class="btn btn-leave">
-                    🚪 End Meeting
+                <button id="endMeetingBtn" class="control-btn control-btn-end">
+                    <i class="fas fa-times"></i>
+                    End Meeting
                 </button>
             `;
             
-            // Add event listeners for host controls
             document.getElementById('startRecordingBtn').addEventListener('click', startRecording);
             document.getElementById('stopRecordingBtn').addEventListener('click', stopRecording);
-            document.getElementById('leaveMeetingBtn').addEventListener('click', endMeeting);
+            document.getElementById('endMeetingBtn').addEventListener('click', endMeeting);
+            
+            // Show speaker management
+            document.getElementById('speakerManagement').classList.add('visible');
             
         } else {
-            roleElement.textContent = 'PARTICIPANT';
-            roleElement.className = 'role-indicator role-participant';
-            
-            // Add participant controls (view-only)
-            controlsSection.innerHTML = `
-                <div style="text-align: center; padding: 20px;">
-                    <p style="color: #666; margin-bottom: 10px;">
-                        👁️ You're viewing this meeting
-                    </p>
-                    <p style="font-size: 14px; color: #999;">
-                        Only the host can control recording
-                    </p>
-                    <button id="leaveMeetingBtn" class="btn btn-leave">
-                        🚪 Leave Meeting
+            controlsContainer.innerHTML = `
+                <div style="text-align: center;">
+                    <div class="text-muted mb-10">
+                        <i class="fas fa-eye"></i>
+                        You're viewing this meeting
+                    </div>
+                    <button id="leaveMeetingBtn" class="control-btn control-btn-leave">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Leave Meeting
                     </button>
                 </div>
             `;
@@ -381,54 +610,77 @@
         }
     }
 
-    // Update participant count display
+    // Update participant count
     function updateParticipantCount() {
         document.getElementById('participantCount').textContent = participantCount;
     }
 
     // Update recording status
-    function updateRecordingStatus(recordingActive) {
+    function updateRecordingStatus(recording) {
         const indicator = document.getElementById('recordingIndicator');
-        if (recordingActive) {
+        const transcriptStatus = document.getElementById('transcriptStatus');
+        
+        if (recording) {
             indicator.classList.add('active');
-            if (userRole === 'host') {
+            transcriptStatus.innerHTML = '<i class="fas fa-circle" style="color: #dc3545;"></i> Recording';
+            
+            if (isHost) {
                 document.getElementById('startRecordingBtn').style.display = 'none';
-                document.getElementById('stopRecordingBtn').style.display = 'inline-block';
+                document.getElementById('stopRecordingBtn').style.display = 'inline-flex';
+            }
+            
+            // Clear empty state
+            const emptyState = document.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
             }
         } else {
             indicator.classList.remove('active');
-            if (userRole === 'host') {
-                document.getElementById('startRecordingBtn').style.display = 'inline-block';
+            transcriptStatus.textContent = 'Stopped';
+            
+            if (isHost) {
+                document.getElementById('startRecordingBtn').style.display = 'inline-flex';
                 document.getElementById('stopRecordingBtn').style.display = 'none';
             }
         }
-        isRecording = recordingActive;
+        
+        isRecording = recording;
     }
 
     // Update transcript
     function updateTranscript(transcript) {
         const content = document.getElementById('transcriptContent');
+        
+        // Remove empty state if exists
+        const emptyState = content.querySelector('.empty-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+        
         const segment = document.createElement('div');
         segment.className = 'transcript-segment';
         segment.setAttribute('data-segment-id', transcript.segment_id || Date.now());
         
-        const speakerClass = transcript.speaker_confidence < 0.5 ? 'unknown-speaker' : '';
-        const editButton = userRole === 'host' && transcript.speaker_confidence < 0.5 ? 
-            '<button class="speaker-edit-btn" onclick="editSpeaker(this)">Edit</button>' : '';
+        const speakerClass = transcript.speaker_confidence < 0.5 ? 'unknown' : '';
+        const editButton = isHost && transcript.speaker_confidence < 0.5 ? 
+            `<button class="edit-speaker-btn" onclick="editSpeaker(this)">
+                <i class="fas fa-edit"></i>
+            </button>` : '';
         
         segment.innerHTML = `
             <div class="speaker-label ${speakerClass}">
+                <i class="fas fa-user"></i>
                 ${transcript.speaker || 'Unknown Speaker'}
                 ${editButton}
             </div>
-            <div>${transcript.text}</div>
+            <div class="transcript-text">${transcript.text}</div>
         `;
         
         content.appendChild(segment);
         transcriptSegments.push(transcript);
         
         // Auto-scroll to bottom
-        const container = document.getElementById('transcriptContainer');
+        const container = document.querySelector('.transcript-container');
         container.scrollTop = container.scrollHeight;
     }
     
@@ -446,7 +698,7 @@
     function handleUnknownSpeaker(speakerId, transcript) {
         if (!activeSpeakers.has(speakerId)) {
             activeSpeakers.set(speakerId, {
-                name: `Unknown Speaker ${activeSpeakers.size + 1}`,
+                name: `Speaker ${activeSpeakers.size + 1}`,
                 confidence: 0.0,
                 last_seen: Date.now()
             });
@@ -459,32 +711,42 @@
         const container = document.getElementById('activeSpeakers');
         container.innerHTML = '';
         
-        activeSpeakers.forEach((speaker, speakerId) => {
-            const tag = document.createElement('div');
-            tag.className = `speaker-tag ${speaker.confidence > 0.7 ? 'active' : 'unknown'}`;
-            tag.innerHTML = `
-                <span>${speaker.name}</span>
-                <small>(${Math.round(speaker.confidence * 100)}%)</small>
-                ${userRole === 'host' ? '<button onclick="editSpeakerName(\'' + speakerId + '\')">✏️</button>' : ''}
+        if (activeSpeakers.size === 0) {
+            container.innerHTML = `
+                <div class="empty-state" style="grid-column: 1 / -1;">
+                    <p class="text-muted">No active speakers yet</p>
+                </div>
             `;
-            container.appendChild(tag);
-        });
-        
-        // Show speaker management section if there are active speakers
-        if (activeSpeakers.size > 0 && userRole === 'host') {
-            document.getElementById('speakerManagement').style.display = 'block';
+            return;
         }
+        
+        activeSpeakers.forEach((speaker, speakerId) => {
+            const card = document.createElement('div');
+            card.className = `speaker-card ${speaker.confidence > 0.7 ? 'verified' : 'unknown'}`;
+            card.innerHTML = `
+                <div class="speaker-info">
+                    <i class="fas fa-user-circle"></i>
+                    <div>
+                        <div>${speaker.name}</div>
+                        <div class="speaker-confidence">${Math.round(speaker.confidence * 100)}% confidence</div>
+                    </div>
+                </div>
+                ${isHost ? `<button class="edit-speaker-btn" onclick="editSpeakerName('${speakerId}')">
+                    <i class="fas fa-edit"></i>
+                </button>` : ''}
+            `;
+            container.appendChild(card);
+        });
     }
     
     // Edit speaker name inline
     function editSpeaker(button) {
-        if (userRole !== 'host') return;
+        if (!isHost) return;
         
         const segment = button.closest('.transcript-segment');
         const speakerLabel = segment.querySelector('.speaker-label');
         const currentName = speakerLabel.textContent.replace('Edit', '').trim();
         
-        // Create dropdown with known speakers + option to add new
         const dropdown = document.createElement('select');
         dropdown.className = 'speaker-dropdown';
         
@@ -496,7 +758,7 @@
             dropdown.appendChild(option);
         });
         
-        // Add current active speakers
+        // Add active speakers
         activeSpeakers.forEach((speaker, id) => {
             const option = document.createElement('option');
             option.value = speaker.name;
@@ -529,7 +791,7 @@
     
     // Edit speaker name from active speakers
     function editSpeakerName(speakerId) {
-        if (userRole !== 'host') return;
+        if (!isHost) return;
         
         const speaker = activeSpeakers.get(speakerId);
         const newName = prompt('Enter new name for speaker:', speaker.name);
@@ -539,7 +801,7 @@
             activeSpeakers.set(speakerId, speaker);
             updateActiveSpeakers();
             
-            // Update all transcript segments for this speaker
+            // Update all transcript segments
             updateTranscriptSpeakerName(speaker.name, newName.trim());
             
             // Notify server
@@ -557,10 +819,16 @@
     // Update segment speaker
     function updateSegmentSpeaker(segment, newName) {
         const speakerLabel = segment.querySelector('.speaker-label');
-        speakerLabel.innerHTML = `${newName} <button class="speaker-edit-btn" onclick="editSpeaker(this)">Edit</button>`;
-        speakerLabel.classList.remove('unknown-speaker');
+        speakerLabel.innerHTML = `
+            <i class="fas fa-user"></i>
+            ${newName}
+            <button class="edit-speaker-btn" onclick="editSpeaker(this)">
+                <i class="fas fa-edit"></i>
+            </button>
+        `;
+        speakerLabel.classList.remove('unknown');
         
-        // Notify server about the change
+        // Notify server
         const segmentId = segment.getAttribute('data-segment-id');
         if (socket && socket.readyState === WebSocket.OPEN) {
             socket.send(JSON.stringify({
@@ -599,13 +867,8 @@
                 });
             }
         } catch (error) {
-            console.error('Error loading known speakers:', error);
+            console.error('Error loading speakers:', error);
         }
-    }
-
-    // Update meeting status
-    function updateMeetingStatus(status) {
-        document.getElementById('meetingStatus').textContent = status;
     }
 
     // Detect device type
@@ -621,7 +884,7 @@
 
     // Start recording (host only)
     async function startRecording() {
-        if (userRole !== 'host') {
+        if (!isHost) {
             alert('Only the host can control recording.');
             return;
         }
@@ -645,7 +908,7 @@
             mediaRecorder.start();
             updateRecordingStatus(true);
             
-            // Notify all participants via WebSocket
+            // Notify all participants
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({
                     'type': 'recording_started',
@@ -655,21 +918,19 @@
             }
         } catch (error) {
             console.error('Error starting recording:', error);
-            alert('Could not access microphone. Please check permissions and ensure you\'re using HTTPS.');
+            alert('Could not access microphone. Please check permissions.');
         }
     }
 
     // Stop recording (host only)
     function stopRecording() {
-        if (userRole !== 'host') {
-            return;
-        }
+        if (!isHost) return;
         
         if (mediaRecorder && isRecording) {
             mediaRecorder.stop();
             updateRecordingStatus(false);
             
-            // Notify all participants via WebSocket
+            // Notify all participants
             if (socket && socket.readyState === WebSocket.OPEN) {
                 socket.send(JSON.stringify({
                     'type': 'recording_stopped',
@@ -699,8 +960,6 @@
             
             if (response.ok) {
                 console.log('Audio uploaded successfully');
-            } else {
-                console.error('Failed to upload audio');
             }
         } catch (error) {
             console.error('Error uploading audio:', error);
@@ -725,9 +984,7 @@
 
     // End meeting (host only)
     function endMeeting() {
-        if (userRole !== 'host') {
-            return;
-        }
+        if (!isHost) return;
         
         if (confirm('Are you sure you want to end the meeting for everyone?')) {
             if (isRecording) {
@@ -742,7 +999,7 @@
                 socket.close();
             }
             
-            window.location.href = '/';
+            window.location.href = '/dashboard/';
         }
     }
 
@@ -756,10 +1013,8 @@
             socket.close();
         }
         
-        window.location.href = '/';
+        window.location.href = '/dashboard/';
     }
-
-    // Event listeners are now added dynamically in updateUI() function
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
@@ -767,42 +1022,49 @@
         loadKnownSpeakers();
         
         // Speaker management event listeners
-        document.getElementById('addSpeakerBtn').addEventListener('click', function() {
-            const name = prompt('Enter speaker name:');
-            if (name && name.trim()) {
-                const speakerId = 'manual_' + Date.now();
-                activeSpeakers.set(speakerId, {
-                    name: name.trim(),
-                    confidence: 1.0,
-                    last_seen: Date.now()
-                });
-                updateActiveSpeakers();
+        const addBtn = document.getElementById('addSpeakerBtn');
+        const refreshBtn = document.getElementById('refreshSpeakersBtn');
+        
+        if (addBtn) {
+            addBtn.addEventListener('click', function() {
+                const name = prompt('Enter speaker name:');
+                if (name && name.trim()) {
+                    const speakerId = 'manual_' + Date.now();
+                    activeSpeakers.set(speakerId, {
+                        name: name.trim(),
+                        confidence: 1.0,
+                        last_seen: Date.now()
+                    });
+                    updateActiveSpeakers();
+                    
+                    // Notify server
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({
+                            'type': 'add_manual_speaker',
+                            'speaker_id': speakerId,
+                            'speaker_name': name.trim(),
+                            'meeting_id': meetingId
+                        }));
+                    }
+                }
+            });
+        }
+        
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+                loadKnownSpeakers();
                 
-                // Notify server
+                // Request refresh from server
                 if (socket && socket.readyState === WebSocket.OPEN) {
                     socket.send(JSON.stringify({
-                        'type': 'add_manual_speaker',
-                        'speaker_id': speakerId,
-                        'speaker_name': name.trim(),
+                        'type': 'refresh_speakers',
                         'meeting_id': meetingId
                     }));
                 }
-            }
-        });
+            });
+        }
         
-        document.getElementById('refreshSpeakersBtn').addEventListener('click', function() {
-            loadKnownSpeakers();
-            
-            // Refresh from server
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    'type': 'refresh_speakers',
-                    'meeting_id': meetingId
-                }));
-            }
-        });
-        
-        // Request notification permission for meeting alerts
+        // Request notification permission
         if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
         }
