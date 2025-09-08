@@ -66,7 +66,7 @@
                     <div style="margin-bottom: 15px; padding: 10px; background: #e6fffa; border-radius: 6px; border-left: 3px solid #10b981;">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
                             <small style="color: #065f46; font-weight: 500;">Voice Sample Available</small>
-                            <span style="color: #10b981; font-size: 16px;">🎤</span>
+                            <i class="fas fa-microphone" style="color: #64a93f;"></i>
                         </div>
                         <audio controls style="width: 100%; height: 30px;">
                             <source src="{{ speaker.sample_audio.url }}" type="audio/webm">
@@ -77,7 +77,7 @@
                     <div style="margin-bottom: 15px; padding: 10px; background: #fef3c7; border-radius: 6px; border-left: 3px solid #f59e0b;">
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <small style="color: #92400e; font-weight: 500;">No Voice Sample</small>
-                            <span style="color: #f59e0b; font-size: 16px;">🎯</span>
+                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i>
                         </div>
                     </div>
                 {% endif %}
@@ -105,13 +105,14 @@
                     {% if not speaker.sample_audio %}
                         <button onclick="sendVoiceSetup('{{ speaker.email }}')" 
                                 class="btn btn-primary" style="flex: 1; padding: 8px; font-size: 12px;">
-                            📧 Send Setup
+                            <i class="fas fa-envelope"></i>
+                            Send Setup
                         </button>
                     {% endif %}
                     
                     <button onclick="viewSpeakerDetails('{{ speaker.id }}')" 
                             class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;">
-                        👁️
+                        <i class="fas fa-eye"></i>
                     </button>
                 </div>
             </div>
@@ -154,7 +155,7 @@
         </div>
     {% else %}
         <div style="text-align: center; padding: 60px; color: #6b7280;">
-            <div style="font-size: 64px; margin-bottom: 20px;">👥</div>
+            <i class="fas fa-users" style="font-size: 48px; margin-bottom: 20px; opacity: 0.3;"></i>
             <h3 style="margin-bottom: 10px; color: #1f2937;">
                 {% if search %}
                     No speakers found
@@ -186,12 +187,12 @@
 <!-- Tips Card -->
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">💡 Speaker Profile Tips</h3>
+        <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 20px;"><i class="fas fa-lightbulb"></i> Speaker Profile Tips</h3>
     </div>
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
         <div>
-            <h4 style="color: #1f2937; margin-bottom: 10px;">🎤 Voice Quality</h4>
+            <h4 style="margin-bottom: 10px;"><i class="fas fa-microphone"></i> Voice Quality</h4>
             <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
                 <li>Clear, 10-15 second recordings work best</li>
                 <li>Quiet environment improves accuracy</li>
@@ -200,7 +201,7 @@
         </div>
         
         <div>
-            <h4 style="color: #1f2937; margin-bottom: 10px;">📈 Improving Accuracy</h4>
+            <h4 style="margin-bottom: 10px;"><i class="fas fa-chart-line"></i> Improving Accuracy</h4>
             <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
                 <li>Accuracy improves with each meeting</li>
                 <li>Consistent microphone setup helps</li>
@@ -209,7 +210,7 @@
         </div>
         
         <div>
-            <h4 style="color: #1f2937; margin-bottom: 10px;">🔒 Privacy & Security</h4>
+            <h4 style="margin-bottom: 10px;"><i class="fas fa-lock"></i> Privacy & Security</h4>
             <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
                 <li>Voice samples are encrypted</li>
                 <li>Only you can access your speakers</li>
