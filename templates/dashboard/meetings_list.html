@@ -1,33 +1,35 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}Meetings - Huddle{% endblock %}
+{% block title %}Meetings - huddle{% endblock %}
 
-{% block content %}
-<div class="page-header">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+{% block dashboard_content %}
+<!-- Simple header -->
+<div class="header">
+    <div class="flex-between">
         <div>
-            <h1 class="page-title">All Meetings</h1>
-            <p class="page-subtitle">Manage your meeting history and active sessions</p>
+            <h1 style="font-size: 20px; margin-bottom: 4px; font-weight: 500;">All Meetings</h1>
+            <div class="text-muted text-small">Manage your meeting history and active sessions</div>
         </div>
         
-        <a href="{% url 'create_meeting' %}" class="btn btn-primary">
-            ➕ New Meeting
+        <a href="{% url 'create_meeting' %}" class="btn">
+            <i class="fas fa-plus"></i>
+            New Meeting
         </a>
     </div>
 </div>
 
 <!-- Search and Filters -->
 <div class="card">
-    <form method="get" style="display: flex; gap: 15px; align-items: end;">
+    <form method="get" style="display: flex; gap: 16px; align-items: end;">
         <div class="form-group" style="flex: 1; margin-bottom: 0;">
-            <label class="form-label" for="search">Search Meetings</label>
-            <input type="text" id="search" name="search" class="form-control" 
+            <label for="search">Search Meetings</label>
+            <input type="text" id="search" name="search" 
                    placeholder="Search by title or meeting ID..." 
                    value="{{ search }}">
         </div>
         
         <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label" for="status">Status</label>
+            <label for="status">Status</label>
             <select id="status" name="status" class="form-control" style="width: 150px;">
                 <option value="">All Status</option>
                 <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>

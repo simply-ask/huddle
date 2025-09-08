@@ -1,24 +1,32 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}Speakers - Huddle{% endblock %}
+{% block title %}Speakers - huddle{% endblock %}
 
-{% block content %}
-<div class="page-header">
-    <h1 class="page-title">Speaker Profiles</h1>
-    <p class="page-subtitle">Manage voice profiles for your organization</p>
+{% block dashboard_content %}
+<!-- Simple header -->
+<div class="header">
+    <div class="flex-between">
+        <div>
+            <h1 style="font-size: 20px; margin-bottom: 4px; font-weight: 500;">Speaker Profiles</h1>
+            <div class="text-muted text-small">Voice profiles for your organization</div>
+        </div>
+    </div>
 </div>
 
 <!-- Search -->
 <div class="card">
-    <form method="get" style="display: flex; gap: 15px; align-items: end;">
+    <form method="get" style="display: flex; gap: 16px; align-items: end;">
         <div class="form-group" style="flex: 1; margin-bottom: 0;">
-            <label class="form-label" for="search">Search Speakers</label>
-            <input type="text" id="search" name="search" class="form-control" 
+            <label for="search">Search Speakers</label>
+            <input type="text" id="search" name="search" 
                    placeholder="Search by name, email, or job title..." 
                    value="{{ search }}">
         </div>
         
-        <button type="submit" class="btn btn-secondary">🔍 Search</button>
+        <button type="submit" class="btn btn-secondary">
+            <i class="fas fa-search"></i>
+            Search
+        </button>
         {% if search %}
             <a href="{% url 'speakers' %}" class="btn btn-secondary">Clear</a>
         {% endif %}
