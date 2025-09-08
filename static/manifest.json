@@ -1,13 +1,19 @@
 {
-    "name": "Huddle - AI Meeting Intelligence",
-    "short_name": "Huddle",
+    "name": "huddle - AI Meeting Intelligence",
+    "short_name": "huddle",
     "description": "Transform any meeting into actionable insights with zero friction",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#1f2937",
+    "background_color": "#0a2134",
+    "theme_color": "#0a2134",
     "orientation": "portrait",
     "icons": [
+        {
+            "src": "images/huddle_logo_square.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
         {
             "src": "icons/icon-72.png",
             "sizes": "72x72",

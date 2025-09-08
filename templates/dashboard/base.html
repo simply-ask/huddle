@@ -3,7 +3,9 @@
 {% block content %}
 <!-- Simple header with logo and user info -->
 <div class="header flex-between">
-    <a href="{% url 'dashboard' %}" class="logo">huddle</a>
+    <a href="{% url 'dashboard' %}">
+        <img src="/static/images/huddle_logo_transparent.png" alt="huddle" class="logo-img">
+    </a>
     <div class="flex gap-20">
         <span class="text-muted">{{ user.get_full_name|default:user.username }}</span>
         <a href="{% url 'logout' %}" class="text-muted" style="text-decoration: none;">
