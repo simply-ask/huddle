@@ -1,195 +1,202 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}{{ meeting.title|default:"Meeting" }} - Huddle{% endblock %}
+{% block title %}{{ meeting.title|default:"Meeting" }} - huddle{% endblock %}
 
-{% block content %}
-<div class="page-header">
-    <div style="display: flex; justify-content: space-between; align-items: start;">
+{% block dashboard_content %}
+<!-- Simple header with status -->
+<div class="header">
+    <div class="flex-between">
         <div>
-            <h1 class="page-title">{{ meeting.title|default:"Untitled Meeting" }}</h1>
-            <p class="page-subtitle">Meeting ID: {{ meeting.meeting_id }} • Created {{ meeting.created_at|date:"M j, Y" }}</p>
+            <h1 class="logo" style="font-size: 20px; margin-bottom: 4px;">{{ meeting.title|default:"Untitled Meeting" }}</h1>
+            <div class="text-muted text-small">Meeting {{ meeting.meeting_id }} • {{ meeting.created_at|date:"M j, Y" }}</div>
         </div>
         
-        <div style="display: flex; gap: 10px;">
+        <div>
             {% if meeting.is_active %}
-                <span class="badge badge-success">Active</span>
+                <div class="status status-active">
+                    <i class="fas fa-circle" style="font-size: 8px;"></i>
+                    Active
+                </div>
             {% else %}
-                <span class="badge badge-warning">Inactive</span>
+                <div class="status status-completed">
+                    <i class="fas fa-circle" style="font-size: 8px;"></i>
+                    Inactive
+                </div>
             {% endif %}
         </div>
+    </div>
+</div>
+
+<!-- Simple stats -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 40px;">
+    <div class="card" style="text-align: center; padding: 16px;">
+        <div style="font-size: 20px; font-weight: 600;">{{ attendee_status|length }}</div>
+        <div class="text-muted text-small">Attendees</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 16px;">
+        <div style="font-size: 20px; font-weight: 600;">
+            {% for attendee in attendee_status %}{% if attendee.has_voice %}{{ forloop.counter }}{% endif %}{% empty %}0{% endfor %}
+        </div>
+        <div class="text-muted text-small">Ready</div>
+    </div>
+    <div class="card" style="text-align: center; padding: 16px;">
+        <div style="font-size: 20px; font-weight: 600;">
+            {% for attendee in attendee_status %}{% if not attendee.has_voice %}{{ forloop.counter }}{% endif %}{% empty %}0{% endfor %}
+        </div>
+        <div class="text-muted text-small">Need Setup</div>
     </div>
 </div>
 
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
     <!-- Attendee Management -->
     <div class="card">
-        <div class="card-header">
-            <h3 class="card-title">Attendees ({{ attendee_status|length }})</h3>
-            <button onclick="showAddAttendeeModal()" class="btn btn-primary">
-                ➕ Add Attendees
+        <div class="flex-between mb-20">
+            <h3 style="font-size: 18px; font-weight: 500;">Attendees</h3>
+            <button onclick="showAddAttendeeModal()" class="btn">
+                <i class="fas fa-plus"></i>
+                Add
             </button>
         </div>
         
         {% if attendee_status %}
-            <div class="table-container">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Attendee</th>
-                            <th>Voice Profile</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for attendee in attendee_status %}
-                        <tr data-email="{{ attendee.email }}">
-                            <td>
-                                <div>
-                                    <strong>{{ attendee.name }}</strong><br>
-                                    <small style="color: #6b7280;">{{ attendee.email }}</small>
-                                    {% if attendee.job_title %}
-                                        <br><small style="color: #6b7280;">{{ attendee.job_title }}</small>
-                                    {% endif %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Attendee</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attendee in attendee_status %}
+                    <tr data-email="{{ attendee.email }}">
+                        <td>
+                            <div style="font-weight: 500;">{{ attendee.name }}</div>
+                            <div class="text-muted text-small">{{ attendee.email }}</div>
+                            {% if attendee.job_title %}
+                                <div class="text-muted text-small">{{ attendee.job_title }}</div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if attendee.has_voice %}
+                                <div class="status status-active">
+                                    <i class="fas fa-check-circle"></i>
+                                    Ready
                                 </div>
-                            </td>
-                            <td>
-                                {% if attendee.has_profile %}
-                                    {% if attendee.has_voice %}
-                                        <span class="badge badge-success">✓ Complete</span>
-                                    {% else %}
-                                        <span class="badge badge-warning">Profile Only</span>
-                                    {% endif %}
-                                {% else %}
-                                    <span class="badge badge-info">Not Set Up</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if attendee.has_voice %}
-                                    <span style="color: #10b981;">Ready</span>
-                                {% else %}
-                                    <span style="color: #f59e0b;">Needs Setup</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div style="display: flex; gap: 5px;">
-                                    {% if not attendee.has_voice %}
-                                        <button onclick="sendInvitation('{{ attendee.email }}')" 
-                                                class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;">
-                                            📧 Invite
-                                        </button>
-                                    {% endif %}
-                                    <button onclick="removeAttendee('{{ attendee.email }}')" 
-                                            class="btn btn-danger" style="padding: 4px 8px; font-size: 12px;">
-                                        ✕
+                            {% elif attendee.has_profile %}
+                                <div class="status status-pending">
+                                    <i class="fas fa-user"></i>
+                                    Profile Only
+                                </div>
+                            {% else %}
+                                <div class="status" style="background: #f5f5f5; color: #666;">
+                                    <i class="fas fa-circle"></i>
+                                    Not Set Up
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                {% if not attendee.has_voice %}
+                                    <button onclick="sendInvitation('{{ attendee.email }}')" 
+                                            class="btn btn-small btn-secondary">
+                                        <i class="fas fa-envelope"></i>
                                     </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                                {% endif %}
+                                <button onclick="removeAttendee('{{ attendee.email }}')" 
+                                        class="btn btn-small" style="background: #fee; color: #c33;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             
             <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button onclick="sendAllInvitations()" class="btn btn-success">
-                    📧 Send All Invitations
+                <button onclick="sendAllInvitations()" class="btn">
+                    <i class="fas fa-envelope"></i>
+                    Send All
                 </button>
                 <button onclick="refreshAttendees()" class="btn btn-secondary">
-                    🔄 Refresh
+                    <i class="fas fa-sync"></i>
+                    Refresh
                 </button>
             </div>
         {% else %}
-            <div style="text-align: center; padding: 40px; color: #6b7280;">
-                <div style="font-size: 48px; margin-bottom: 15px;">👥</div>
-                <h4>No attendees added</h4>
-                <p>Add attendees to get started with this meeting</p>
-                <button onclick="showAddAttendeeModal()" class="btn btn-primary" style="margin-top: 15px;">
+            <div style="text-align: center; padding: 60px 20px;">
+                <i class="fas fa-users" style="font-size: 48px; margin-bottom: 20px; opacity: 0.3;"></i>
+                <h3 style="margin-bottom: 12px;">No attendees yet</h3>
+                <p class="text-muted" style="margin-bottom: 24px;">Add attendees to get started with this meeting</p>
+                <button onclick="showAddAttendeeModal()" class="btn">
+                    <i class="fas fa-plus"></i>
                     Add First Attendee
                 </button>
             </div>
         {% endif %}
     </div>
     
-    <!-- Meeting Info & Actions -->
+    <!-- Meeting Actions -->
     <div>
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Meeting Links</h3>
+            <div class="flex-between mb-20">
+                <h3 style="font-size: 18px; font-weight: 500;">Meeting Link</h3>
             </div>
             
             <div class="form-group">
-                <label class="form-label">Meeting Join URL</label>
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="meetingUrl" class="form-control" 
-                           value="{{ meeting_url }}" readonly>
-                    <button onclick="copyToClipboard('meetingUrl')" class="btn btn-secondary">
-                        📋 Copy
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="meetingUrl" 
+                           value="{{ meeting_url }}" readonly 
+                           style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">
+                    <button onclick="copyToClipboard('meetingUrl')" class="btn btn-small btn-secondary">
+                        <i class="fas fa-copy"></i>
                     </button>
                 </div>
             </div>
             
-            <div style="margin-top: 20px;">
-                <a href="{{ meeting_url }}" target="_blank" class="btn btn-primary" style="width: 100%;">
-                    🚪 Join Meeting Room
+            <div style="margin-top: 16px;">
+                <a href="{{ meeting_url }}" target="_blank" class="btn" style="width: 100%;">
+                    <i class="fas fa-external-link-alt"></i>
+                    Join Room
                 </a>
             </div>
         </div>
         
         <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Meeting Statistics</h3>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div>
-                    <div style="font-size: 24px; font-weight: bold; color: #1f2937;">{{ attendee_status|length }}</div>
-                    <div style="color: #6b7280; font-size: 12px;">Total Attendees</div>
-                </div>
-                
-                <div>
-                    <div style="font-size: 24px; font-weight: bold; color: #10b981;">
-                        {% for attendee in attendee_status %}
-                            {% if attendee.has_voice %}{{ forloop.counter }}{% endif %}
-                        {% empty %}0{% endfor %}
-                    </div>
-                    <div style="color: #6b7280; font-size: 12px;">Voice Profiles</div>
-                </div>
-                
-                <div>
-                    <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">
-                        {% for attendee in attendee_status %}
-                            {% if not attendee.has_voice %}{{ forloop.counter }}{% endif %}
-                        {% empty %}0{% endfor %}
-                    </div>
-                    <div style="color: #6b7280; font-size: 12px;">Need Setup</div>
-                </div>
-                
-                <div>
-                    <div style="font-size: 24px; font-weight: bold; color: {% if meeting.is_active %}#10b981{% else %}#6b7280{% endif %};">
-                        {% if meeting.is_active %}✓{% else %}—{% endif %}
-                    </div>
-                    <div style="color: #6b7280; font-size: 12px;">Status</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Actions</h3>
+            <div class="flex-between mb-20">
+                <h3 style="font-size: 18px; font-weight: 500;">Actions</h3>
             </div>
             
             <div style="display: flex; flex-direction: column; gap: 10px;">
                 <a href="{% url 'meetings_list' %}" class="btn btn-secondary">
-                    ← Back to Meetings
+                    <i class="fas fa-arrow-left"></i>
+                    Back
                 </a>
                 
-                <button onclick="toggleMeetingStatus()" class="btn {% if meeting.is_active %}btn-danger{% else %}btn-success{% endif %}">
-                    {% if meeting.is_active %}⏸️ Deactivate{% else %}▶️ Activate{% endif %}
+                {% if meeting.transcriptsegment_set.exists %}
+                    <a href="{% url 'meeting_transcript' meeting.meeting_id %}" class="btn btn-secondary">
+                        <i class="fas fa-file-text"></i>
+                        View Transcript
+                    </a>
+                {% endif %}
+                
+                <button onclick="toggleMeetingStatus()" class="btn {% if meeting.is_active %}btn-secondary{% else %}btn-primary{% endif %}">
+                    {% if meeting.is_active %}
+                        <i class="fas fa-pause"></i>
+                        Deactivate
+                    {% else %}
+                        <i class="fas fa-play"></i>
+                        Activate
+                    {% endif %}
                 </button>
                 
-                <a href="{% url 'delete_meeting' meeting.meeting_id %}" class="btn btn-danger">
-                    🗑️ Delete Meeting
+                <a href="{% url 'delete_meeting' meeting.meeting_id %}" 
+                   class="btn" 
+                   style="background: #fee; color: #c33;"
+                   onclick="return confirm('Delete this meeting?')">
+                    <i class="fas fa-trash"></i>
+                    Delete
                 </a>
             </div>
         </div>
@@ -198,25 +205,34 @@
 
 <!-- Add Attendee Modal -->
 <div id="addAttendeeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 500px;">
-        <h3 style="margin-bottom: 20px;">Add Attendees</h3>
-        
-        <div class="form-group">
-            <label class="form-label">Email Addresses</label>
-            <textarea id="newAttendees" class="form-control" 
-                      placeholder="Enter email addresses (one per line)&#10;john@company.com&#10;jane@company.com" 
-                      rows="4"></textarea>
+    <div class="card" style="width: 90%; max-width: 500px;">
+        <div class="flex-between mb-20">
+            <h3 style="font-size: 18px; font-weight: 500;">Add Attendees</h3>
+            <button onclick="closeAddAttendeeModal()" class="btn btn-small btn-secondary">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         
         <div class="form-group">
-            <label style="display: flex; align-items: center; gap: 10px;">
+            <label>Email Addresses</label>
+            <textarea id="newAttendees" 
+                      placeholder="john@company.com&#10;jane@company.com" 
+                      rows="4" 
+                      style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                 <input type="checkbox" id="sendInvitesCheck" checked>
                 Send voice setup invitations
             </label>
         </div>
         
         <div style="display: flex; gap: 10px; margin-top: 20px;">
-            <button onclick="addAttendees()" class="btn btn-primary">Add Attendees</button>
+            <button onclick="addAttendees()" class="btn">
+                <i class="fas fa-plus"></i>
+                Add Attendees
+            </button>
             <button onclick="closeAddAttendeeModal()" class="btn btn-secondary">Cancel</button>
         </div>
     </div>

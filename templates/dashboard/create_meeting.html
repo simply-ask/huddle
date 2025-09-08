@@ -1,119 +1,107 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}Create Meeting - Huddle{% endblock %}
+{% block title %}Create Meeting - huddle{% endblock %}
 
-{% block content %}
-<div class="page-header">
-    <h1 class="page-title">Create New Meeting</h1>
-    <p class="page-subtitle">Set up a new meeting and invite attendees</p>
-</div>
+{% block dashboard_content %}
 
-<div style="max-width: 800px;">
+<div style="max-width: 600px;">
+    <!-- Simple header -->
+    <div class="mb-40">
+        <h1 style="font-size: 24px; font-weight: 500; margin-bottom: 8px;">Create Meeting</h1>
+        <p class="text-muted">Set up a new meeting session</p>
+    </div>
+
+    <!-- Simple form -->
     <form method="post" class="card">
         {% csrf_token %}
         
         <div class="form-group">
-            <label class="form-label" for="title">Meeting Title *</label>
-            <input type="text" id="title" name="title" class="form-control" 
-                   placeholder="e.g., Weekly Team Standup" 
+            <label for="title">Meeting Title</label>
+            <input type="text" id="title" name="title" 
+                   placeholder="Weekly standup" 
                    value="{{ title|default:'' }}" required>
         </div>
         
         <div class="form-group">
-            <label class="form-label" for="attendees">Attendees *</label>
-            <textarea id="attendees" name="attendees" class="form-control" 
-                      placeholder="Enter email addresses (one per line or comma-separated)&#10;john@company.com&#10;jane@company.com&#10;bob@company.com" 
-                      rows="6">{{ attendees|default:'' }}</textarea>
-            <small style="color: #6b7280; font-size: 12px; margin-top: 5px; display: block;">
-                💡 Tip: You can paste email addresses separated by commas or new lines
-            </small>
+            <label for="attendees">Attendees</label>
+            <textarea id="attendees" name="attendees" 
+                      placeholder="john@company.com&#10;jane@company.com" 
+                      rows="4">{{ attendees|default:'' }}</textarea>
+            <div class="text-muted text-small" style="margin-top: 4px;">
+                <i class="fas fa-info-circle"></i>
+                Enter email addresses, one per line
+            </div>
         </div>
         
         <div class="form-group">
-            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                 <input type="checkbox" name="send_invites" {% if not attendees %}checked{% endif %}>
-                <span class="form-label" style="margin: 0;">Send voice setup invitations immediately</span>
+                Send invitations now
             </label>
-            <small style="color: #6b7280; font-size: 12px; margin-top: 5px; display: block; margin-left: 20px;">
-                Attendees will receive emails with links to set up their voice profiles
-            </small>
         </div>
         
-        <div style="display: flex; gap: 15px; margin-top: 30px;">
-            <button type="submit" class="btn btn-primary">
-                ✨ Create Meeting
+        <div class="flex gap-10">
+            <button type="submit" class="btn">
+                <i class="fas fa-plus"></i>
+                Create Meeting
             </button>
-            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+            <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </a>
         </div>
     </form>
     
-    <!-- Suggested Speakers -->
+    <!-- Quick add from existing speakers -->
     {% if suggested_speakers %}
-    <div class="card" style="margin-top: 20px;">
-        <div class="card-header">
-            <h3 class="card-title">Quick Add Speakers</h3>
-            <p style="color: #6b7280; font-size: 14px; margin: 0;">Click to add from your existing speakers</p>
+    <div class="card">
+        <div class="flex-between mb-20">
+            <h3 style="font-size: 18px; font-weight: 500;">Quick Add</h3>
+            <div class="text-muted text-small">Existing speakers</div>
         </div>
         
-        <div style="display: flex; flex-wrap: gap: 10px;">
+        <div style="display: flex; flex-wrap: gap: 8px;">
             {% for speaker in suggested_speakers %}
-            <button type="button" class="suggested-speaker" 
+            <button type="button" class="btn btn-small btn-secondary" 
                     onclick="addSpeaker('{{ speaker.email }}', '{{ speaker.full_name }}')"
-                    style="background: #f3f4f6; border: 1px solid #d1d5db; padding: 8px 15px; border-radius: 20px; cursor: pointer; font-size: 14px; transition: all 0.3s;">
-                {{ speaker.full_name }} ({{ speaker.email }})
-                {% if speaker.job_title %}
-                    <br><small style="color: #6b7280;">{{ speaker.job_title }}</small>
-                {% endif %}
+                    style="font-size: 13px;">
+                <i class="fas fa-plus"></i>
+                {{ speaker.full_name }}
             </button>
             {% endfor %}
         </div>
     </div>
     {% endif %}
     
-    <!-- Meeting Guidelines -->
-    <div class="card" style="margin-top: 20px;">
-        <div class="card-header">
-            <h3 class="card-title">📋 Meeting Setup Guidelines</h3>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+    <!-- Simple help -->
+    <div class="card" style="background: #f8f9fa;">
+        <div class="flex gap-20">
             <div>
-                <h4 style="color: #1f2937; margin-bottom: 10px;">📧 Email Invitations</h4>
-                <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
-                    <li>Attendees receive voice setup links</li>
-                    <li>Links expire in 7 days for security</li>
-                    <li>Voice profiles work across meetings</li>
-                </ul>
+                <div class="flex gap-10 mb-10">
+                    <i class="fas fa-envelope" style="color: #666;"></i>
+                    <span style="font-weight: 500;">Email Setup</span>
+                </div>
+                <div class="text-muted text-small">Attendees get voice setup links</div>
             </div>
             
             <div>
-                <h4 style="color: #1f2937; margin-bottom: 10px;">🎤 Voice Setup</h4>
-                <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
-                    <li>10-15 second voice samples</li>
-                    <li>Improves speaker identification</li>
-                    <li>Optional but highly recommended</li>
-                </ul>
+                <div class="flex gap-10 mb-10">
+                    <i class="fas fa-microphone" style="color: #666;"></i>
+                    <span style="font-weight: 500;">Voice Samples</span>
+                </div>
+                <div class="text-muted text-small">10-15 seconds for ID</div>
             </div>
             
             <div>
-                <h4 style="color: #1f2937; margin-bottom: 10px;">📱 Meeting Day</h4>
-                <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
-                    <li>Single phone recording approach</li>
-                    <li>Real-time speaker identification</li>
-                    <li>Live transcript and AI summaries</li>
-                </ul>
+                <div class="flex gap-10 mb-10">
+                    <i class="fas fa-phone" style="color: #666;"></i>
+                    <span style="font-weight: 500;">Recording</span>
+                </div>
+                <div class="text-muted text-small">Single device captures all</div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.suggested-speaker:hover {
-    background: #e5e7eb !important;
-    transform: translateY(-2px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-</style>
 
 <script>
 function addSpeaker(email, name) {
@@ -130,36 +118,18 @@ function addSpeaker(email, name) {
     attendeesField.value = newValue;
     
     // Visual feedback
-    const button = event.target.closest('.suggested-speaker');
-    button.style.background = '#d1fae5';
-    button.style.color = '#065f46';
-    button.style.borderColor = '#10b981';
+    const button = event.target.closest('button');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i> Added';
+    button.style.background = '#e8f5e8';
+    button.style.color = '#2e7d32';
     
     setTimeout(() => {
-        button.style.background = '#f3f4f6';
+        button.innerHTML = originalText;
+        button.style.background = '';
         button.style.color = '';
-        button.style.borderColor = '#d1d5db';
-    }, 2000);
+    }, 1500);
 }
-
-// Email validation on paste
-document.getElementById('attendees').addEventListener('paste', function(e) {
-    setTimeout(() => {
-        const text = this.value;
-        const lines = text.split(/[\n,]+/).map(line => line.trim()).filter(line => line);
-        
-        // Basic email validation
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const validEmails = lines.filter(line => emailPattern.test(line));
-        
-        if (validEmails.length !== lines.length) {
-            // Show warning about invalid emails
-            const invalidEmails = lines.filter(line => !emailPattern.test(line));
-            console.warn('Invalid emails detected:', invalidEmails);
-        }
-        
-        this.value = validEmails.join('\n');
-    }, 100);
-});
 </script>
+
 {% endblock %}
