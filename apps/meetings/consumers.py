@@ -31,6 +31,12 @@ class MeetingConsumer(AsyncWebsocketConsumer):
             await self.handle_audio_quality_update(data)
         elif message_type == 'recording_status':
             await self.handle_recording_status(data)
+        elif message_type == 'remote_audio':
+            await self.handle_remote_audio(data)
+        elif message_type == 'request_audio_stream':
+            await self.handle_audio_stream_request(data)
+        elif message_type == 'mic_status':
+            await self.handle_mic_status(data)
     
     async def handle_participant_joined(self, data):
         await self.channel_layer.group_send(
@@ -69,4 +75,48 @@ class MeetingConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps(event))
     
     async def recording_status_message(self, event):
+        await self.send(text_data=json.dumps(event))
+    
+    async def handle_remote_audio(self, data):
+        """Handle audio from remote participants"""
+        # Store remote audio for processing
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'remote_audio_message',
+                'participant_id': data.get('participant_id'),
+                'participant_name': data.get('participant_name'),
+                'audio_data': data.get('audio_data'),
+                'timestamp': data.get('timestamp'),
+            }
+        )
+    
+    async def handle_audio_stream_request(self, data):
+        """Handle request for room audio stream"""
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'audio_stream_request_message',
+                'participant_id': data.get('participant_id'),
+            }
+        )
+    
+    async def handle_mic_status(self, data):
+        """Handle microphone mute/unmute status"""
+        await self.channel_layer.group_send(
+            self.room_group_name,
+            {
+                'type': 'mic_status_message',
+                'participant_id': data.get('participant_id'),
+                'muted': data.get('muted'),
+            }
+        )
+    
+    async def remote_audio_message(self, event):
+        await self.send(text_data=json.dumps(event))
+    
+    async def audio_stream_request_message(self, event):
+        await self.send(text_data=json.dumps(event))
+    
+    async def mic_status_message(self, event):
         await self.send(text_data=json.dumps(event))

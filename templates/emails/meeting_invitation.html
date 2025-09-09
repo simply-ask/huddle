@@ -226,9 +226,18 @@
                 {% endif %}
             </div>
             
-            <!-- CTA Button -->
+            <!-- CTA Buttons -->
             <div class="button-container">
                 <a href="{{ meeting_url }}" class="button">Join Meeting</a>
+            </div>
+            
+            <div class="button-container" style="margin-top: 16px;">
+                <p class="message" style="margin-bottom: 12px; font-size: 14px; color: #718096;">
+                    Can't make it in person?
+                </p>
+                <a href="{{ meeting_url }}?mode=remote" class="button" style="background: rgba(100, 169, 63, 0.1); color: #64a93f; border: 1px solid #64a93f;">
+                    Join Remotely Instead
+                </a>
             </div>
             
             <p class="message" style="margin-top: 32px; margin-bottom: 0;">

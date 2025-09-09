@@ -276,9 +276,215 @@
         max-width: 1200px;
         margin: 0 auto;
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         align-items: center;
         gap: 16px;
+    }
+    
+    /* Participation mode toggle */
+    .participation-toggle {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+    
+    .toggle-switch {
+        position: relative;
+        width: 60px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .toggle-switch.remote {
+        background: #64a93f;
+    }
+    
+    .toggle-handle {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 24px;
+        height: 24px;
+        background: white;
+        border-radius: 50%;
+        transition: all 0.3s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .toggle-switch.remote .toggle-handle {
+        transform: translateX(30px);
+    }
+    
+    /* Remote controls */
+    .remote-controls {
+        display: none;
+        align-items: center;
+        gap: 16px;
+        flex: 1;
+        justify-content: center;
+    }
+    
+    .remote-controls.active {
+        display: flex;
+    }
+    
+    .mic-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        padding: 10px 16px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+    
+    .mic-control:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .mic-control.muted {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border-color: rgba(220, 53, 69, 0.4);
+    }
+    
+    .volume-control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .volume-slider {
+        width: 80px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        outline: none;
+        -webkit-appearance: none;
+    }
+    
+    .volume-slider::-webkit-slider-thumb {
+        width: 16px;
+        height: 16px;
+        background: #64a93f;
+        border-radius: 50%;
+        cursor: pointer;
+        -webkit-appearance: none;
+    }
+    
+    .connection-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #64a93f;
+        animation: pulse 2s infinite;
+    }
+    
+    .status-dot.disconnected {
+        background: #dc3545;
+        animation: none;
+    }
+    
+    .recording-controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    
+    /* Remote participants list */
+    .remote-participants-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+        margin-top: 8px;
+    }
+    
+    .remote-participant-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    
+    .remote-participant-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .remote-participant-avatar {
+        width: 24px;
+        height: 24px;
+        background: rgba(100, 169, 63, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #64a93f;
+    }
+    
+    .remote-participant-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .remote-participant-status {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .remote-participant-controls {
+        display: flex;
+        gap: 4px;
+    }
+    
+    .participant-control-btn {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 3px;
+        font-size: 12px;
+        transition: all 0.2s;
+    }
+    
+    .participant-control-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+    }
+    
+    .participant-control-btn.muted {
+        color: #dc3545;
     }
     
     .control-btn {
@@ -411,7 +617,7 @@
     
     <!-- Participants section -->
     <div class="participants-card">
-        <div class="flex-between">
+        <div class="flex-between mb-20">
             <div class="host-info">
                 <div class="host-icon">
                     <i class="fas fa-phone"></i>
@@ -427,6 +633,17 @@
             <div class="text-muted">
                 <i class="fas fa-users"></i>
                 <span id="participantCount">0</span> viewing
+            </div>
+        </div>
+        
+        <!-- Remote participants list (admin only) -->
+        <div id="remoteParticipants" style="display: none;">
+            <div class="text-small text-muted mb-10">
+                <i class="fas fa-wifi"></i>
+                Remote Participants
+            </div>
+            <div id="remoteParticipantsList" class="remote-participants-grid">
+                <!-- Remote participants will be populated dynamically -->
             </div>
         </div>
     </div>
@@ -481,7 +698,41 @@
 <!-- Fixed controls bar -->
 <div class="controls-bar">
     <div class="controls-container" id="controlsContainer">
-        <!-- Controls will be added dynamically based on user role -->
+        <!-- Recording controls (in-person mode) -->
+        <div class="recording-controls" id="recordingControls">
+            <button id="recordBtn" class="control-btn">
+                <i class="fas fa-circle" id="recordIcon"></i>
+                <span id="recordText">Start Recording</span>
+            </button>
+            <div id="recordingTimer" class="recording-timer" style="display: none;">00:00</div>
+        </div>
+        
+        <!-- Remote controls (remote mode) -->
+        <div class="remote-controls" id="remoteControls">
+            <div class="mic-control" id="micControl">
+                <i class="fas fa-microphone" id="micIcon"></i>
+                <span id="micText">Microphone</span>
+            </div>
+            
+            <div class="volume-control">
+                <i class="fas fa-volume-up"></i>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
+            </div>
+            
+            <div class="connection-status">
+                <div class="status-dot" id="connectionDot"></div>
+                <span id="connectionText">Connected</span>
+            </div>
+        </div>
+        
+        <!-- Participation mode toggle -->
+        <div class="participation-toggle">
+            <span>In Person</span>
+            <div class="toggle-switch" id="participationToggle">
+                <div class="toggle-handle"></div>
+            </div>
+            <span>Remote</span>
+        </div>
     </div>
 </div>
 
@@ -497,6 +748,17 @@
     let isHost = {{ user.id == meeting.host.id|yesno:'true,false' }};
     let participantCount = 0;
     let activeSpeakers = new Map();
+    let isRemoteMode = false;
+    let remoteAudioStream = null;
+    let remoteMediaRecorder = null;
+    let isMuted = false;
+    let remoteAudio = null;
+    
+    // Check if user accessed via remote link
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'remote') {
+        isRemoteMode = true;
+    }
     let knownSpeakers = new Map();
     let transcriptSegments = [];
 
@@ -538,10 +800,18 @@
             case 'participant_joined':
                 participantCount++;
                 updateParticipantCount();
+                // Check if it's a remote participant
+                if (data.participant_name && data.participant_id) {
+                    addRemoteParticipant(data.participant_id, data.participant_name);
+                }
                 break;
             case 'participant_left':
                 participantCount = Math.max(0, participantCount - 1);
                 updateParticipantCount();
+                // Remove from remote participants if applicable
+                if (data.participant_id) {
+                    removeRemoteParticipant(data.participant_id);
+                }
                 break;
             case 'recording_started':
                 updateRecordingStatus(true);
@@ -561,6 +831,15 @@
                 break;
             case 'speaker_unknown':
                 handleUnknownSpeaker(data.speaker_id, data.transcript);
+                break;
+            case 'remote_audio_message':
+                handleRemoteAudioMessage(data);
+                break;
+            case 'audio_stream_request_message':
+                handleAudioStreamRequest(data);
+                break;
+            case 'mic_status_message':
+                handleMicStatusMessage(data);
                 break;
         }
     }
@@ -1070,11 +1349,345 @@
         }
     });
 
+    // Remote participation functionality
+    function toggleParticipationMode() {
+        isRemoteMode = !isRemoteMode;
+        const toggle = document.getElementById('participationToggle');
+        const recordingControls = document.getElementById('recordingControls');
+        const remoteControls = document.getElementById('remoteControls');
+        
+        if (isRemoteMode) {
+            toggle.classList.add('remote');
+            recordingControls.style.display = 'none';
+            remoteControls.classList.add('active');
+            initRemoteMode();
+        } else {
+            toggle.classList.remove('remote');
+            recordingControls.style.display = 'flex';
+            remoteControls.classList.remove('active');
+            cleanupRemoteMode();
+        }
+        
+        // Update URL without reload
+        const url = new URL(window.location);
+        if (isRemoteMode) {
+            url.searchParams.set('mode', 'remote');
+        } else {
+            url.searchParams.delete('mode');
+        }
+        window.history.replaceState({}, '', url);
+    }
+    
+    async function initRemoteMode() {
+        try {
+            // Get user media for microphone
+            remoteAudioStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+            
+            // Set up remote audio recording
+            remoteMediaRecorder = new MediaRecorder(remoteAudioStream);
+            remoteMediaRecorder.ondataavailable = handleRemoteAudioData;
+            remoteMediaRecorder.start(1000); // Send data every second
+            
+            // Initialize remote audio listening (placeholder for WebRTC)
+            initRemoteAudioListening();
+            
+            updateConnectionStatus('connected');
+            
+        } catch (error) {
+            console.error('Error initializing remote mode:', error);
+            updateConnectionStatus('disconnected');
+            alert('Could not access microphone. Please check permissions.');
+        }
+    }
+    
+    function cleanupRemoteMode() {
+        if (remoteAudioStream) {
+            remoteAudioStream.getTracks().forEach(track => track.stop());
+            remoteAudioStream = null;
+        }
+        if (remoteMediaRecorder) {
+            remoteMediaRecorder.stop();
+            remoteMediaRecorder = null;
+        }
+        if (remoteAudio) {
+            remoteAudio.pause();
+            remoteAudio = null;
+        }
+    }
+    
+    function handleRemoteAudioData(event) {
+        if (event.data.size > 0 && socket && !isMuted) {
+            // Send remote audio data to server
+            const reader = new FileReader();
+            reader.onload = function() {
+                socket.send(JSON.stringify({
+                    type: 'remote_audio',
+                    audio_data: Array.from(new Uint8Array(reader.result)),
+                    participant_id: '{{ user.id|default:"anonymous" }}',
+                    participant_name: '{{ user.get_full_name|default:user.username|default:"Remote User" }}'
+                }));
+            };
+            reader.readAsArrayBuffer(event.data);
+        }
+    }
+    
+    function initRemoteAudioListening() {
+        // Placeholder for WebRTC audio streaming
+        // This would establish connection to receive room audio
+        console.log('Initializing remote audio listening...');
+        
+        // For now, we'll simulate this with WebSocket messages
+        if (socket) {
+            socket.send(JSON.stringify({
+                type: 'request_audio_stream',
+                participant_id: '{{ user.id|default:"anonymous" }}'
+            }));
+        }
+    }
+    
+    function toggleMicrophone() {
+        isMuted = !isMuted;
+        const micControl = document.getElementById('micControl');
+        const micIcon = document.getElementById('micIcon');
+        const micText = document.getElementById('micText');
+        
+        if (isMuted) {
+            micControl.classList.add('muted');
+            micIcon.className = 'fas fa-microphone-slash';
+            micText.textContent = 'Muted';
+        } else {
+            micControl.classList.remove('muted');
+            micIcon.className = 'fas fa-microphone';
+            micText.textContent = 'Microphone';
+        }
+        
+        // Notify other participants
+        if (socket) {
+            socket.send(JSON.stringify({
+                type: 'mic_status',
+                participant_id: '{{ user.id|default:"anonymous" }}',
+                muted: isMuted
+            }));
+        }
+    }
+    
+    function updateConnectionStatus(status) {
+        const dot = document.getElementById('connectionDot');
+        const text = document.getElementById('connectionText');
+        
+        if (status === 'connected') {
+            dot.classList.remove('disconnected');
+            text.textContent = 'Connected';
+        } else {
+            dot.classList.add('disconnected');
+            text.textContent = 'Disconnected';
+        }
+    }
+    
+    // Event listeners for remote controls
+    document.getElementById('participationToggle').addEventListener('click', toggleParticipationMode);
+    document.getElementById('micControl').addEventListener('click', toggleMicrophone);
+    
+    // Volume control
+    document.getElementById('volumeSlider').addEventListener('input', function(e) {
+        if (remoteAudio) {
+            remoteAudio.volume = e.target.value / 100;
+        }
+    });
+    
+    // Remote audio message handlers
+    function handleRemoteAudioMessage(data) {
+        // Process audio from remote participants
+        console.log('Remote audio received from:', data.participant_name);
+        
+        // In a full implementation, this would:
+        // 1. Mix remote audio with room audio for recording
+        // 2. Add to transcript processing pipeline
+        // 3. Play remote audio through room speakers (if enabled)
+        
+        // For now, we'll create a transcript entry for remote speakers
+        if (data.audio_data && data.participant_name) {
+            // This would normally go through speech recognition
+            // For demo, we'll simulate transcript processing
+            addRemoteParticipantTranscript(data.participant_name, '[Speaking remotely...]');
+        }
+    }
+    
+    function handleAudioStreamRequest(data) {
+        // Handle request from remote participant to receive room audio
+        console.log('Audio stream requested by:', data.participant_id);
+        
+        // In a full implementation, this would:
+        // 1. Check if participant has permission
+        // 2. Start streaming room audio to this participant
+        // 3. Set up WebRTC peer connection
+        
+        // For now, we'll acknowledge the request
+        if (socket && isRecording) {
+            socket.send(JSON.stringify({
+                type: 'audio_stream_response',
+                participant_id: data.participant_id,
+                stream_available: true
+            }));
+        }
+    }
+    
+    function handleMicStatusMessage(data) {
+        // Handle microphone status updates from remote participants
+        console.log('Mic status update:', data.participant_id, 'muted:', data.muted);
+        
+        // Update UI to show who's muted (admin view)
+        updateRemoteParticipantStatus(data.participant_id, data.muted);
+    }
+    
+    function addRemoteParticipantTranscript(speakerName, text) {
+        // Add remote participant speech to transcript
+        const transcript = {
+            speaker: speakerName + ' (Remote)',
+            text: text,
+            timestamp: new Date().toISOString(),
+            speaker_confidence: 1.0 // Remote speakers are always identified
+        };
+        updateTranscript(transcript);
+    }
+    
+    function updateRemoteParticipantStatus(participantId, muted) {
+        // Update participant status in UI (for admin/host view)
+        console.log(`Participant ${participantId} is ${muted ? 'muted' : 'unmuted'}`);
+        
+        const participantCard = document.querySelector(`[data-participant-id="${participantId}"]`);
+        if (participantCard) {
+            const statusIcon = participantCard.querySelector('.participant-status-icon');
+            const muteBtn = participantCard.querySelector('.participant-mute-btn');
+            
+            if (muted) {
+                statusIcon.className = 'fas fa-microphone-slash participant-status-icon';
+                statusIcon.style.color = '#dc3545';
+                muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                muteBtn.title = 'Unmute participant';
+            } else {
+                statusIcon.className = 'fas fa-microphone participant-status-icon';
+                statusIcon.style.color = '#64a93f';
+                muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+                muteBtn.title = 'Mute participant';
+            }
+        }
+    }
+    
+    // Manage remote participants
+    let remoteParticipants = new Map();
+    
+    function addRemoteParticipant(participantId, participantName) {
+        if (remoteParticipants.has(participantId)) return;
+        
+        const participant = {
+            id: participantId,
+            name: participantName,
+            muted: false,
+            connected: true,
+            joinedAt: new Date()
+        };
+        
+        remoteParticipants.set(participantId, participant);
+        renderRemoteParticipants();
+        
+        // Show remote participants section if admin/host
+        if (isHost && remoteParticipants.size > 0) {
+            document.getElementById('remoteParticipants').style.display = 'block';
+        }
+    }
+    
+    function removeRemoteParticipant(participantId) {
+        remoteParticipants.delete(participantId);
+        renderRemoteParticipants();
+        
+        // Hide section if no remote participants
+        if (remoteParticipants.size === 0) {
+            document.getElementById('remoteParticipants').style.display = 'none';
+        }
+    }
+    
+    function renderRemoteParticipants() {
+        const container = document.getElementById('remoteParticipantsList');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        
+        remoteParticipants.forEach((participant, id) => {
+            const card = document.createElement('div');
+            card.className = 'remote-participant-card';
+            card.setAttribute('data-participant-id', id);
+            
+            const initials = participant.name.split(' ').map(n => n[0]).join('').toUpperCase();
+            const statusIcon = participant.muted ? 'fa-microphone-slash' : 'fa-microphone';
+            const statusColor = participant.muted ? '#dc3545' : '#64a93f';
+            
+            card.innerHTML = `
+                <div class="remote-participant-info">
+                    <div class="remote-participant-avatar">${initials}</div>
+                    <div>
+                        <div class="remote-participant-name">${participant.name}</div>
+                        <div class="remote-participant-status">
+                            <i class="fas ${statusIcon} participant-status-icon" style="color: ${statusColor}"></i>
+                            ${participant.muted ? 'Muted' : 'Speaking'}
+                        </div>
+                    </div>
+                </div>
+                ${isHost ? `
+                    <div class="remote-participant-controls">
+                        <button class="participant-control-btn participant-mute-btn" 
+                                onclick="toggleParticipantMute('${id}')" 
+                                title="${participant.muted ? 'Unmute participant' : 'Mute participant'}">
+                            <i class="fas ${participant.muted ? 'fa-volume-up' : 'fa-volume-mute'}"></i>
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+            
+            container.appendChild(card);
+        });
+    }
+    
+    function toggleParticipantMute(participantId) {
+        const participant = remoteParticipants.get(participantId);
+        if (!participant || !isHost) return;
+        
+        // Send mute command to participant
+        if (socket) {
+            socket.send(JSON.stringify({
+                type: 'admin_mute_participant',
+                participant_id: participantId,
+                muted: !participant.muted
+            }));
+        }
+        
+        // Update local state (will be confirmed by WebSocket response)
+        participant.muted = !participant.muted;
+        renderRemoteParticipants();
+    }
+
+    // Initialize mode based on URL parameter
+    document.addEventListener('DOMContentLoaded', function() {
+        if (isRemoteMode) {
+            document.getElementById('participationToggle').classList.add('remote');
+            document.getElementById('recordingControls').style.display = 'none';
+            document.getElementById('remoteControls').classList.add('active');
+            initRemoteMode();
+        }
+    });
+
     // Handle page unload
     window.addEventListener('beforeunload', function() {
         if (isRecording) {
             stopRecording();
         }
+        cleanupRemoteMode();
         if (socket) {
             socket.close();
         }
