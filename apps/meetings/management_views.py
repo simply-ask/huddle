@@ -21,7 +21,7 @@ def create_meeting_view(request):
         # Get scheduling fields
         scheduled_date = request.POST.get('scheduled_date')
         scheduled_time = request.POST.get('scheduled_time')
-        meeting_type = request.POST.get('meeting_type', 'virtual')
+        meeting_type = request.POST.get('meeting_type', 'in_person')
         location = request.POST.get('location', '').strip()
         meeting_link = request.POST.get('meeting_link', '').strip()
         

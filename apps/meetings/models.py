@@ -17,7 +17,7 @@ class Meeting(TimeStampedModel):
     is_active = models.BooleanField(default=True)
     
     # Scheduling fields
-    meeting_type = models.CharField(max_length=20, choices=MEETING_TYPE_CHOICES, default='virtual')
+    meeting_type = models.CharField(max_length=20, choices=MEETING_TYPE_CHOICES, default='in_person')
     scheduled_start = models.DateTimeField(null=True, blank=True, help_text="Scheduled meeting start time")
     scheduled_duration = models.IntegerField(default=60, help_text="Duration in minutes")
     location = models.CharField(max_length=255, blank=True, help_text="Physical location for in-person/hybrid meetings")
