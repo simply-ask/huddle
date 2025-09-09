@@ -22,6 +22,54 @@
                    value="{{ title|default:'' }}" required>
         </div>
         
+        <!-- Date and Time -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-group">
+                <label for="scheduled_date">Date</label>
+                <input type="date" id="scheduled_date" name="scheduled_date" 
+                       value="{{ scheduled_date|default:'' }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="scheduled_time">Time</label>
+                <input type="time" id="scheduled_time" name="scheduled_time" 
+                       value="{{ scheduled_time|default:'' }}" required>
+            </div>
+        </div>
+        
+        <!-- Hidden duration field with default value -->
+        <input type="hidden" id="scheduled_duration" name="scheduled_duration" value="60">
+        
+        <!-- Meeting Type -->
+        <div class="form-group">
+            <label for="meeting_type">Meeting Type</label>
+            <select id="meeting_type" name="meeting_type" onchange="toggleLocationFields()">
+                <option value="virtual" {% if meeting_type == 'virtual' %}selected{% endif %}>Virtual</option>
+                <option value="in_person" {% if meeting_type == 'in_person' %}selected{% endif %}>In Person</option>
+                <option value="hybrid" {% if meeting_type == 'hybrid' %}selected{% endif %}>Hybrid</option>
+            </select>
+        </div>
+        
+        <!-- Location (for in-person/hybrid) -->
+        <div class="form-group" id="location_field" style="display: none;">
+            <label for="location">Location</label>
+            <input type="text" id="location" name="location" 
+                   placeholder="Conference Room B, 3rd Floor" 
+                   value="{{ location|default:'' }}">
+        </div>
+        
+        <!-- Meeting Link (for virtual/hybrid) -->
+        <div class="form-group" id="meeting_link_field">
+            <label for="meeting_link">Meeting Link (optional)</label>
+            <input type="url" id="meeting_link" name="meeting_link" 
+                   placeholder="https://zoom.us/j/123456789" 
+                   value="{{ meeting_link|default:'' }}">
+            <div class="text-muted text-small" style="margin-top: 4px;">
+                <i class="fas fa-info-circle"></i>
+                Leave blank to use huddle's built-in meeting room
+            </div>
+        </div>
+        
         <div class="form-group">
             <label for="attendees">Attendees</label>
             <textarea id="attendees" name="attendees" 
@@ -104,6 +152,53 @@
 </div>
 
 <script>
+function toggleLocationFields() {
+    const meetingType = document.getElementById('meeting_type').value;
+    const locationField = document.getElementById('location_field');
+    const meetingLinkField = document.getElementById('meeting_link_field');
+    const locationInput = document.getElementById('location');
+    const meetingLinkInput = document.getElementById('meeting_link');
+    
+    if (meetingType === 'in_person') {
+        locationField.style.display = 'block';
+        meetingLinkField.style.display = 'none';
+        locationInput.required = true;
+        meetingLinkInput.required = false;
+    } else if (meetingType === 'virtual') {
+        locationField.style.display = 'none';
+        meetingLinkField.style.display = 'block';
+        locationInput.required = false;
+        meetingLinkInput.required = false;
+    } else if (meetingType === 'hybrid') {
+        locationField.style.display = 'block';
+        meetingLinkField.style.display = 'block';
+        locationInput.required = true;
+        meetingLinkInput.required = false;
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleLocationFields();
+    
+    // Set default date to today
+    const dateInput = document.getElementById('scheduled_date');
+    if (!dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+    
+    // Set default time to next hour
+    const timeInput = document.getElementById('scheduled_time');
+    if (!timeInput.value) {
+        const now = new Date();
+        now.setHours(now.getHours() + 1, 0, 0, 0);
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        timeInput.value = `${hours}:${minutes}`;
+    }
+});
+
 function addSpeaker(email, name) {
     const attendeesField = document.getElementById('attendees');
     const currentValue = attendeesField.value.trim();

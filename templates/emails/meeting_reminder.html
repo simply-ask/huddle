@@ -225,10 +225,31 @@
                     <span class="info-value">{{ host_name }}</span>
                 </div>
                 
-                {% if meeting.started_at %}
+                {% if meeting.scheduled_start %}
                 <div class="info-row">
-                    <span class="info-label">Starts</span>
-                    <span class="info-value">{{ meeting.started_at|date:"F j, Y at g:i A" }}</span>
+                    <span class="info-label">Date & Time</span>
+                    <span class="info-value">{{ meeting.scheduled_start|date:"F j, Y at g:i A" }}</span>
+                </div>
+                {% endif %}
+                
+                {% if meeting.meeting_type %}
+                <div class="info-row">
+                    <span class="info-label">Meeting Type</span>
+                    <span class="info-value">{{ meeting.get_meeting_type_display }}</span>
+                </div>
+                {% endif %}
+                
+                {% if meeting.location %}
+                <div class="info-row">
+                    <span class="info-label">Location</span>
+                    <span class="info-value">{{ meeting.location }}</span>
+                </div>
+                {% endif %}
+                
+                {% if meeting.meeting_link %}
+                <div class="info-row">
+                    <span class="info-label">Meeting Link</span>
+                    <span class="info-value"><a href="{{ meeting.meeting_link }}" style="color: #64a93f;">Join Online</a></span>
                 </div>
                 {% endif %}
             </div>

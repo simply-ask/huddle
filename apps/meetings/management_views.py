@@ -18,6 +18,14 @@ def create_meeting_view(request):
         attendees = request.POST.get('attendees', '').strip()
         send_invites = request.POST.get('send_invites') == 'on'
         
+        # Get scheduling fields
+        scheduled_date = request.POST.get('scheduled_date')
+        scheduled_time = request.POST.get('scheduled_time')
+        scheduled_duration = request.POST.get('scheduled_duration', '60')
+        meeting_type = request.POST.get('meeting_type', 'virtual')
+        location = request.POST.get('location', '').strip()
+        meeting_link = request.POST.get('meeting_link', '').strip()
+        
         # Parse attendee emails (comma or newline separated)
         attendee_list = []
         if attendees:
@@ -35,14 +43,44 @@ def create_meeting_view(request):
             return render(request, 'dashboard/create_meeting.html', {
                 'title': title,
                 'attendees': attendees,
+                'scheduled_date': scheduled_date,
+                'scheduled_time': scheduled_time,
+                'scheduled_duration': scheduled_duration,
+                'meeting_type': meeting_type,
+                'location': location,
+                'meeting_link': meeting_link,
             })
+        
+        # Combine date and time into datetime
+        scheduled_start = None
+        if scheduled_date and scheduled_time:
+            from datetime import datetime
+            try:
+                scheduled_start = datetime.strptime(f"{scheduled_date} {scheduled_time}", "%Y-%m-%d %H:%M")
+            except ValueError:
+                messages.error(request, 'Invalid date or time format')
+                return render(request, 'dashboard/create_meeting.html', {
+                    'title': title,
+                    'attendees': attendees,
+                    'scheduled_date': scheduled_date,
+                    'scheduled_time': scheduled_time,
+                    'scheduled_duration': scheduled_duration,
+                    'meeting_type': meeting_type,
+                    'location': location,
+                    'meeting_link': meeting_link,
+                })
         
         # Create meeting
         meeting = Meeting.objects.create(
             title=title,
             host=request.user,
             organization_name=request.user.get_full_name() or request.user.username,
-            expected_speakers=attendee_list
+            expected_speakers=attendee_list,
+            meeting_type=meeting_type,
+            scheduled_start=scheduled_start,
+            scheduled_duration=int(scheduled_duration) if scheduled_duration else 60,
+            location=location,
+            meeting_link=meeting_link
         )
         
         # Check for existing speaker profiles
