@@ -232,12 +232,6 @@
                 </div>
                 {% endif %}
                 
-                {% if meeting.meeting_type %}
-                <div class="info-row">
-                    <span class="info-label">Meeting Type</span>
-                    <span class="info-value">{{ meeting.get_meeting_type_display }}</span>
-                </div>
-                {% endif %}
                 
                 {% if meeting.location %}
                 <div class="info-row">
@@ -246,12 +240,6 @@
                 </div>
                 {% endif %}
                 
-                {% if meeting.meeting_link %}
-                <div class="info-row">
-                    <span class="info-label">Meeting Link</span>
-                    <span class="info-value"><a href="{{ meeting.meeting_link }}" style="color: #64a93f;">Join Online</a></span>
-                </div>
-                {% endif %}
             </div>
             
             <!-- CTA Button -->

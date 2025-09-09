@@ -21,9 +21,7 @@ def create_meeting_view(request):
         # Get scheduling fields
         scheduled_date = request.POST.get('scheduled_date')
         scheduled_time = request.POST.get('scheduled_time')
-        meeting_type = request.POST.get('meeting_type', 'in_person')
         location = request.POST.get('location', '').strip()
-        meeting_link = request.POST.get('meeting_link', '').strip()
         
         # Parse attendee emails (comma or newline separated)
         attendee_list = []
@@ -44,9 +42,7 @@ def create_meeting_view(request):
                 'attendees': attendees,
                 'scheduled_date': scheduled_date,
                 'scheduled_time': scheduled_time,
-                'meeting_type': meeting_type,
                 'location': location,
-                'meeting_link': meeting_link,
             })
         
         # Combine date and time into datetime
@@ -62,9 +58,7 @@ def create_meeting_view(request):
                     'attendees': attendees,
                     'scheduled_date': scheduled_date,
                     'scheduled_time': scheduled_time,
-                    'meeting_type': meeting_type,
                     'location': location,
-                    'meeting_link': meeting_link,
                 })
         
         # Create meeting
@@ -73,11 +67,9 @@ def create_meeting_view(request):
             host=request.user,
             organization_name=request.user.get_full_name() or request.user.username,
             expected_speakers=attendee_list,
-            meeting_type=meeting_type,
             scheduled_start=scheduled_start,
             scheduled_duration=60,  # Default value, not shown to users
-            location=location,
-            meeting_link=meeting_link
+            location=location
         )
         
         # Check for existing speaker profiles
