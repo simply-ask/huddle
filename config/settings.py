@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
 SECRET_KEY = 'bc_io%$az9sl8z9#3+w5ck2g67fykg5(!l^t%n$35)%+4zg58w'
-DEBUG = True  # Same as simplyAsk - keep True even in production
+DEBUG = False  # Production mode for better static file caching
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'huddle.spot', 'seal-app-us4nj.ondigitalocean.app', '.ondigitalocean.app']
 
 
@@ -134,6 +134,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 # WhiteNoise configuration for serving static files in production
 WHITENOISE_USE_FINDERS = True
 WHITENOISE_AUTOREFRESH = DEBUG
+# Add compression and caching for production
+WHITENOISE_COMPRESS_OFFLINE = not DEBUG
+WHITENOISE_MAX_AGE = 31536000  # 1 year cache for static files
 
 # Media files
 MEDIA_URL = '/media/'
