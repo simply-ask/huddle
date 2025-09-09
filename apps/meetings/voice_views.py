@@ -146,6 +146,26 @@ def process_voice_setup(request, meeting_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+def voice_setup_complete_view(request, meeting_id):
+    """Voice setup completion page"""
+    meeting = get_object_or_404(Meeting, meeting_id=meeting_id, is_active=True)
+    email = request.GET.get('email')
+    
+    # Try to find the speaker profile
+    try:
+        speaker_profile = SpeakerProfile.objects.get(
+            organization=meeting.host,
+            email=email
+        )
+        return render(request, 'voice_setup_complete.html', {
+            'meeting': meeting,
+            'speaker': speaker_profile
+        })
+    except SpeakerProfile.DoesNotExist:
+        return render(request, 'voice_setup_error.html', {
+            'error': 'Voice setup not found. Please try the setup process again.'
+        })
+
 def analyze_voice_sample(audio_file):
     """Analyze voice sample and extract features (placeholder implementation)"""
     # This would integrate with actual voice analysis library

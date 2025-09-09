@@ -3,8 +3,14 @@
 
 {% block title %}Voice Setup Complete - {{ meeting.title|default:meeting.meeting_id }}{% endblock %}
 
-{% block extra_head %}
+{% block extra_css %}
 <style>
+    /* Override base styles for consistent theme */
+    body {
+        background: #0B2033;
+        min-height: 100vh;
+    }
+    
     .success-container {
         max-width: 600px;
         margin: 0 auto;
@@ -17,7 +23,7 @@
         margin-bottom: 20px;
     }
     .success-header {
-        color: #28a745;
+        color: #64a93f;
         margin-bottom: 30px;
     }
     .meeting-info {
@@ -28,11 +34,12 @@
         text-align: left;
     }
     .speaker-info {
-        background: #e8f5e8;
-        border: 2px solid #28a745;
+        background: rgba(100, 169, 63, 0.1);
+        border: 2px solid #64a93f;
         border-radius: 8px;
         padding: 20px;
         margin: 20px 0;
+        color: #fff;
     }
     .speaker-stats {
         display: flex;
@@ -104,6 +111,12 @@
 
 {% block content %}
 <div class="success-container">
+    <!-- Header with logo -->
+    <div class="mb-40">
+        <a href="/">
+            <img src="/static/images/huddle_logo_transparent.svg" alt="huddle" style="height: 60px; margin-bottom: 20px;">
+        </a>
+    </div>
     <div class="success-icon">✅</div>
     <h1 class="success-header">Voice Setup Complete!</h1>
     <p>Your voice profile has been successfully created and saved.</p>

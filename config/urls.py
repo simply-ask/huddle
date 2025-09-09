@@ -139,7 +139,7 @@ urlpatterns = [
     # Voice Setup (Public)
     path('meet/<str:meeting_id>/voice-setup/', voice_views.voice_setup_view, name='voice_setup'),
     path('meet/<str:meeting_id>/voice-setup-process/', voice_views.process_voice_setup, name='process_voice_setup'),
-    path('meet/<str:meeting_id>/voice-setup-complete/', voice_views.voice_setup_view, name='voice_setup_complete'),
+    path('meet/<str:meeting_id>/voice-setup-complete/', voice_views.voice_setup_complete_view, name='voice_setup_complete'),
     path('api/meeting/<str:meeting_id>/speakers/', voice_views.meeting_speaker_status, name='meeting_speaker_status'),
     
     # Debug Endpoints (Staff Only)
