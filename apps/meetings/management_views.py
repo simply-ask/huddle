@@ -44,7 +44,6 @@ def create_meeting_view(request):
                 'attendees': attendees,
                 'scheduled_date': scheduled_date,
                 'scheduled_time': scheduled_time,
-                'scheduled_duration': scheduled_duration,
                 'meeting_type': meeting_type,
                 'location': location,
                 'meeting_link': meeting_link,
@@ -63,7 +62,6 @@ def create_meeting_view(request):
                     'attendees': attendees,
                     'scheduled_date': scheduled_date,
                     'scheduled_time': scheduled_time,
-                    'scheduled_duration': scheduled_duration,
                     'meeting_type': meeting_type,
                     'location': location,
                     'meeting_link': meeting_link,
@@ -77,7 +75,7 @@ def create_meeting_view(request):
             expected_speakers=attendee_list,
             meeting_type=meeting_type,
             scheduled_start=scheduled_start,
-            scheduled_duration=int(scheduled_duration) if scheduled_duration else 60,
+            scheduled_duration=60,  # Default value, not shown to users
             location=location,
             meeting_link=meeting_link
         )
