@@ -3,63 +3,65 @@
 {% block title %}login - huddle{% endblock %}
 
 {% block content %}
-<div style="max-width: 400px; margin: 100px auto; text-align: center;">
-    
-    <!-- Simple logo -->
-    <div class="header" style="border: none; margin-bottom: 60px;">
-        <img src="/static/images/huddle_logo_transparent.svg" alt="huddle" style="height: 60px; margin-bottom: 16px;">
-        <p class="text-muted">get stuff done</p>
-    </div>
-    
-    <!-- Messages -->
-    {% if messages %}
-        {% for message in messages %}
-            <div class="message {% if message.tags == 'error' %}message-error{% else %}message-info{% endif %}">
-                <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-    
-    <!-- Login form -->
-    <div class="card" style="text-align: left;">
-        <form method="post">
-            {% csrf_token %}
-            
-            <div class="form-group">
-                <label for="username">Username</label>
-                <input type="text" id="username" name="username" required autofocus>
-            </div>
-            
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            
-            <button type="submit" class="btn" style="width: 100%; justify-content: center;">
-                <i class="fas fa-sign-in-alt"></i>
-                Sign In
-            </button>
-        </form>
-    </div>
-    
-    <!-- Simple features list -->
-    <div style="margin-top: 60px; padding-top: 40px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-        <div class="text-muted text-small">
-            <div style="margin-bottom: 12px;">
-                <i class="fas fa-microphone" style="width: 20px;"></i>
-                Voice recognition
-            </div>
-            <div style="margin-bottom: 12px;">
-                <i class="fas fa-file-lines" style="width: 20px;"></i>
-                Live transcription
-            </div>
-            <div>
-                <i class="fas fa-brain" style="width: 20px;"></i>
-                AI summaries
+<div style="min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px 20px;">
+    <div style="max-width: 400px; width: 100%; text-align: center;">
+        
+        <!-- Simple logo -->
+        <div class="header" style="border: none; margin-bottom: 5vh;">
+            <img src="/static/images/huddle_logo_transparent.svg" alt="huddle" style="height: 60px; margin-bottom: 16px;">
+            <p class="text-muted">get stuff done</p>
+        </div>
+        
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {% if message.tags == 'error' %}message-error{% else %}message-info{% endif %}">
+                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <!-- Login form -->
+        <div class="card" style="text-align: left;">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <button type="submit" class="btn" style="width: 100%; justify-content: center;">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+            </form>
+        </div>
+        
+        <!-- Simple features list -->
+        <div style="margin-top: 4vh; padding-top: 3vh; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+            <div class="text-muted text-small">
+                <div style="margin-bottom: 12px;">
+                    <i class="fas fa-microphone" style="width: 20px;"></i>
+                    Voice recognition
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <i class="fas fa-file-lines" style="width: 20px;"></i>
+                    Live transcription
+                </div>
+                <div>
+                    <i class="fas fa-brain" style="width: 20px;"></i>
+                    AI summaries
+                </div>
             </div>
         </div>
-    </div>
 
+    </div>
 </div>
 {% endblock %}
