@@ -101,19 +101,30 @@
         </div>
         
         <!-- Date and Time -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-            <div class="form-group">
-                <label for="scheduled_date">Date</label>
-                <input type="date" id="scheduled_date" name="scheduled_date" 
-                       value="{{ scheduled_date|default:'' }}" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="scheduled_time">Time</label>
-                <select id="scheduled_time" name="scheduled_time" class="time-select" required>
-                    <option value="">Select time</option>
+        <div class="form-group">
+            <label for="scheduled_date">Date</label>
+            <input type="date" id="scheduled_date" name="scheduled_date" 
+                   value="{{ scheduled_date|default:'' }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="scheduled_time">Time</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <select id="scheduled_hour" name="scheduled_hour" class="time-select" style="width: 100px;" required>
+                    <option value="">Hour</option>
                 </select>
+                <span style="font-size: 20px; color: rgba(255, 255, 255, 0.5);">:</span>
+                <select id="scheduled_minute" name="scheduled_minute" class="time-select" style="width: 100px;" required>
+                    <option value="">Min</option>
+                    <option value="00">00</option>
+                    <option value="15">15</option>
+                    <option value="30">30</option>
+                    <option value="45">45</option>
+                </select>
+                <span id="time_display" class="text-muted" style="margin-left: 16px; font-size: 14px;"></span>
             </div>
+            <!-- Hidden input to maintain backward compatibility -->
+            <input type="hidden" id="scheduled_time" name="scheduled_time">
         </div>
         
         <!-- Location -->
