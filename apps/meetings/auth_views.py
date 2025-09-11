@@ -108,7 +108,10 @@ def meetings_list_view(request):
 @login_required
 def speakers_view(request):
     """View all speaker profiles"""
-    speakers = SpeakerProfile.objects.filter(organization=request.user).order_by('-created_at')
+    speakers = SpeakerProfile.objects.filter(
+        organization=request.user,
+        is_active=True  # Only show active profiles
+    ).order_by('-created_at')
     
     # Search
     search = request.GET.get('search', '')

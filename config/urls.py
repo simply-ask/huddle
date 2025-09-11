@@ -142,6 +142,10 @@ urlpatterns = [
     path('meet/<str:meeting_id>/voice-setup-complete/', voice_views.voice_setup_complete_view, name='voice_setup_complete'),
     path('api/meeting/<str:meeting_id>/speakers/', voice_views.meeting_speaker_status, name='meeting_speaker_status'),
     
+    # Speaker Profile Management
+    path('api/speaker/<int:speaker_id>/delete/', management_views.delete_speaker_profile_view, name='delete_speaker_profile'),
+    path('api/speaker/<int:speaker_id>/request-voice/', management_views.request_new_voice_view, name='request_new_voice'),
+    
     # Debug Endpoints (Staff Only)
     path('debug/email-config/', debug_views.email_debug_info, name='email_debug_info'),
     path('debug/test-email/', debug_views.test_email_send, name='test_email_send'),
@@ -155,3 +159,6 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+
+

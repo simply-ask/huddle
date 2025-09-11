@@ -280,3 +280,68 @@ def delete_meeting_view(request, meeting_id):
         return redirect('meetings_list')
     
     return render(request, 'dashboard/delete_meeting.html', {'meeting': meeting})
+
+@login_required
+@require_http_methods(['POST'])
+def delete_speaker_profile_view(request, speaker_id):
+    """Soft delete a speaker profile"""
+    speaker = get_object_or_404(SpeakerProfile, id=speaker_id, organization=request.user)
+    
+    try:
+        # Soft delete - keep the data but mark inactive
+        speaker.is_active = False
+        speaker.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'Profile for {speaker.full_name} has been removed'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
+
+@login_required
+@require_http_methods(['POST'])
+def request_new_voice_view(request, speaker_id):
+    """Send a new voice setup invitation to update existing profile"""
+    speaker = get_object_or_404(SpeakerProfile, id=speaker_id, organization=request.user)
+    
+    try:
+        # Find a recent meeting to use for the voice setup link
+        # Or create a temporary meeting context
+        recent_meeting = Meeting.objects.filter(
+            host=request.user,
+            is_active=True
+        ).first()
+        
+        if not recent_meeting:
+            # Create a temporary meeting for voice setup
+            recent_meeting = Meeting.objects.create(
+                title=f"Voice Update for {speaker.full_name}",
+                host=request.user,
+                organization_name=request.user.get_full_name() or request.user.username,
+                expected_speakers=[speaker.email],
+                is_active=True
+            )
+        
+        # Send voice setup invitation
+        success, message = send_voice_setup_invitation(recent_meeting, speaker.email)
+        
+        if success:
+            return JsonResponse({
+                'success': True,
+                'message': f'Voice setup link sent to {speaker.email}'
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': message
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)

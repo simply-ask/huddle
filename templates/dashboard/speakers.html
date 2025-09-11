@@ -1,13 +1,13 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}Speakers - huddle{% endblock %}
+{% block title %}Attendees - huddle{% endblock %}
 
 {% block dashboard_content %}
 <!-- Simple header -->
 <div class="header">
     <div class="flex-between">
         <div>
-            <h1 style="font-size: 20px; margin-bottom: 4px; font-weight: 500;">Speaker Profiles</h1>
+            <h1 style="font-size: 20px; margin-bottom: 4px; font-weight: 500;">Attendee Profiles</h1>
             <div class="text-muted text-small">Voice profiles for your organization</div>
         </div>
     </div>
@@ -17,7 +17,7 @@
 <div class="card">
     <form method="get" style="display: flex; gap: 16px; align-items: end;">
         <div class="form-group" style="flex: 1; margin-bottom: 0;">
-            <label for="search">Search Speakers</label>
+            <label for="search">Search Attendees</label>
             <input type="text" id="search" name="search" 
                    placeholder="Search by name, email, or job title..." 
                    value="{{ search }}">
@@ -33,7 +33,7 @@
     </form>
 </div>
 
-<!-- Speakers Grid -->
+<!-- Attendees Grid -->
 <div class="card">
     {% if speakers %}
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
@@ -102,7 +102,13 @@
                 
                 <!-- Actions -->
                 <div style="display: flex; gap: 8px;">
-                    {% if not speaker.sample_audio %}
+                    {% if speaker.sample_audio %}
+                        <button onclick="requestNewVoice('{{ speaker.id }}', '{{ speaker.full_name }}')" 
+                                class="btn btn-secondary" style="flex: 1; padding: 8px; font-size: 12px;">
+                            <i class="fas fa-microphone"></i>
+                            Update Voice
+                        </button>
+                    {% else %}
                         <button onclick="sendVoiceSetup('{{ speaker.email }}')" 
                                 class="btn btn-primary" style="flex: 1; padding: 8px; font-size: 12px;">
                             <i class="fas fa-envelope"></i>
@@ -110,9 +116,9 @@
                         </button>
                     {% endif %}
                     
-                    <button onclick="viewSpeakerDetails('{{ speaker.id }}')" 
-                            class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px;">
-                        <i class="fas fa-eye"></i>
+                    <button onclick="deleteProfile('{{ speaker.id }}', '{{ speaker.full_name }}')" 
+                            class="btn btn-secondary" style="padding: 8px 12px; font-size: 12px; background: #fee; color: #c33;">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             </div>
@@ -124,7 +130,7 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
                 <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px;">
                     <div style="font-size: 24px; font-weight: bold; color: #1f2937;">{{ speakers|length }}</div>
-                    <div style="color: #6b7280; font-size: 14px;">Total Speakers</div>
+                    <div style="color: #6b7280; font-size: 14px;">Total Attendees</div>
                 </div>
                 
                 <div style="text-align: center; padding: 15px; background: #f9fafb; border-radius: 8px;">
@@ -158,16 +164,16 @@
             <i class="fas fa-users" style="font-size: 48px; margin-bottom: 20px; opacity: 0.3;"></i>
             <h3 style="margin-bottom: 10px; color: #1f2937;">
                 {% if search %}
-                    No speakers found
+                    No attendees found
                 {% else %}
-                    No speaker profiles yet
+                    No attendee profiles yet
                 {% endif %}
             </h3>
             <p style="margin-bottom: 30px;">
                 {% if search %}
                     Try adjusting your search criteria
                 {% else %}
-                    Speaker profiles are created when attendees complete voice setup
+                    Attendee profiles are created when they complete voice setup
                 {% endif %}
             </p>
             
@@ -187,7 +193,7 @@
 <!-- Tips Card -->
 <div class="card">
     <div class="card-header">
-        <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 20px;"><i class="fas fa-lightbulb"></i> Speaker Profile Tips</h3>
+        <h3 style="font-size: 18px; font-weight: 500; margin-bottom: 20px;"><i class="fas fa-lightbulb"></i> Attendee Profile Tips</h3>
     </div>
     
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
@@ -213,7 +219,7 @@
             <h4 style="margin-bottom: 10px;"><i class="fas fa-lock"></i> Privacy & Security</h4>
             <ul style="color: #6b7280; font-size: 14px; line-height: 1.6;">
                 <li>Voice samples are encrypted</li>
-                <li>Only you can access your speakers</li>
+                <li>Only you can access your attendees</li>
                 <li>Profiles can be deleted anytime</li>
             </ul>
         </div>
@@ -230,9 +236,72 @@ async function sendVoiceSetup(email) {
     alert('Feature requires meeting context - send invitations from meeting management page');
 }
 
-function viewSpeakerDetails(speakerId) {
-    // Could open a modal or navigate to detail page
-    alert(`Speaker details view - ID: ${speakerId}`);
+async function deleteProfile(speakerId, speakerName) {
+    if (!confirm(`Remove profile for ${speakerName}? This will deactivate their profile but keep historical data.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/speaker/${speakerId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.message || data.error));
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    }
+}
+
+async function requestNewVoice(speakerId, speakerName) {
+    if (!confirm(`Send new voice setup link to ${speakerName}? This will allow them to update their voice sample.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/speaker/${speakerId}/request-voice/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert(data.message);
+        } else {
+            alert('Error: ' + (data.message || data.error));
+        }
+    } catch (error) {
+        alert('Network error: ' + error.message);
+    }
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
 </script>
 {% endblock %}
