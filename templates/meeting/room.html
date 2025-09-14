@@ -606,13 +606,23 @@
         <span>Recording</span>
     </div>
     
-    <!-- Meeting header -->
-    <div class="meeting-header">
-        <h1 class="meeting-title">{{ meeting.title|default:"Meeting" }}</h1>
-        <div class="text-muted">
-            <i class="fas fa-hashtag"></i>
-            Meeting ID: {{ meeting.meeting_id }}
-        </div>
+    <!-- Simple meeting header - Toaster UI -->
+    <div class="meeting-header" style="text-align: center; padding: 40px 20px;">
+        <h1 style="font-size: 32px; font-weight: 300; margin-bottom: 8px; color: #fff;">
+            {{ meeting.title|default:"Meeting Room" }}
+        </h1>
+        {% if meeting.scheduled_start %}
+            <div class="text-muted" style="font-size: 16px;">
+                <i class="fas fa-calendar" style="margin-right: 8px;"></i>
+                {{ meeting.scheduled_start|date:"M j, Y at g:i A" }}
+            </div>
+        {% endif %}
+        {% if meeting.location %}
+            <div class="text-muted" style="font-size: 16px; margin-top: 4px;">
+                <i class="fas fa-map-marker-alt" style="margin-right: 8px;"></i>
+                {{ meeting.location }}
+            </div>
+        {% endif %}
     </div>
     
     <!-- Participants section -->

@@ -312,19 +312,21 @@
                 </div>
                 
                 <div class="info-row">
-                    <span class="info-label">Meeting ID</span>
-                    <span class="info-value">{{ meeting.meeting_id }}</span>
-                </div>
-                
-                <div class="info-row">
                     <span class="info-label">Host</span>
                     <span class="info-value">{{ host_name }}</span>
                 </div>
                 
-                {% if meeting.started_at %}
+                {% if meeting.scheduled_start %}
                 <div class="info-row">
-                    <span class="info-label">Scheduled</span>
-                    <span class="info-value">{{ meeting.started_at|date:"F j, Y at g:i A" }}</span>
+                    <span class="info-label">Date & Time</span>
+                    <span class="info-value">{{ meeting.scheduled_start|date:"F j, Y at g:i A" }}</span>
+                </div>
+                {% endif %}
+                
+                {% if meeting.location %}
+                <div class="info-row">
+                    <span class="info-label">Location</span>
+                    <span class="info-value">{{ meeting.location }}</span>
                 </div>
                 {% endif %}
             </div>

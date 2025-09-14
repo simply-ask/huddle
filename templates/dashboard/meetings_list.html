@@ -66,9 +66,17 @@
                     <tr>
                         <td>
                             <div style="font-weight: 500;">{{ meeting.title|default:"Untitled Meeting" }}</div>
-                            <div class="text-muted text-small">{{ meeting.meeting_id }}</div>
-                            {% if meeting.organization_name %}
-                                <div class="text-muted text-small">{{ meeting.organization_name }}</div>
+                            {% if meeting.scheduled_start %}
+                                <div class="text-muted text-small">
+                                    <i class="fas fa-calendar" style="width: 14px;"></i>
+                                    {{ meeting.scheduled_start|date:"M j, Y at g:i A" }}
+                                </div>
+                            {% endif %}
+                            {% if meeting.location %}
+                                <div class="text-muted text-small">
+                                    <i class="fas fa-map-marker-alt" style="width: 14px;"></i>
+                                    {{ meeting.location }}
+                                </div>
                             {% endif %}
                         </td>
                         <td>

@@ -221,7 +221,7 @@ else:
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 SENDGRID_FROM_EMAIL = 'noreply@huddle.spot'
 
-SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
+SITE_URL = os.environ.get('SITE_URL', 'https://huddle.spot')
 
 # Logging configuration for email debugging
 LOGGING = {
