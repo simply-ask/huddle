@@ -217,63 +217,94 @@
 </div>
 
 <script>
-// Generate time options in 15-minute increments
-function generateTimeOptions() {
-    const timeSelect = document.getElementById('scheduled_time');
-    const savedValue = '{{ scheduled_time|default:"" }}';
+// Generate hour options (00-23)
+function generateHourOptions() {
+    const hourSelect = document.getElementById('scheduled_hour');
+    const savedTime = '{{ scheduled_time|default:"" }}';
+    const savedHour = savedTime ? savedTime.split(':')[0] : '';
     
     for (let hour = 0; hour < 24; hour++) {
-        for (let minute = 0; minute < 60; minute += 15) {
-            const hourStr = String(hour).padStart(2, '0');
-            const minuteStr = String(minute).padStart(2, '0');
-            const timeValue = `${hourStr}:${minuteStr}`;
-            
-            // Format display with AM/PM
-            let displayHour = hour;
-            let period = 'AM';
-            if (hour === 0) {
-                displayHour = 12;
-            } else if (hour === 12) {
-                period = 'PM';
-            } else if (hour > 12) {
-                displayHour = hour - 12;
-                period = 'PM';
-            }
-            
-            const displayTime = `${displayHour}:${minuteStr} ${period}`;
-            
-            const option = document.createElement('option');
-            option.value = timeValue;
-            option.textContent = displayTime;
-            
-            // Set selected if matches saved value
-            if (timeValue === savedValue) {
-                option.selected = true;
-            }
-            
-            timeSelect.appendChild(option);
-        }
-    }
-    
-    // If no saved value, set default to next hour
-    if (!savedValue && !timeSelect.value) {
-        const now = new Date();
-        const nextHour = new Date(now);
-        nextHour.setHours(now.getHours() + 1);
-        nextHour.setMinutes(Math.ceil(now.getMinutes() / 15) * 15);
-        if (nextHour.getMinutes() === 60) {
-            nextHour.setHours(nextHour.getHours() + 1);
-            nextHour.setMinutes(0);
+        const hourStr = String(hour).padStart(2, '0');
+        const option = document.createElement('option');
+        option.value = hourStr;
+        option.textContent = hourStr;
+        
+        if (hourStr === savedHour) {
+            option.selected = true;
         }
         
-        const defaultTime = `${String(nextHour.getHours()).padStart(2, '0')}:${String(nextHour.getMinutes()).padStart(2, '0')}`;
-        timeSelect.value = defaultTime;
+        hourSelect.appendChild(option);
     }
+}
+
+// Update the time display and hidden input
+function updateTimeDisplay() {
+    const hourSelect = document.getElementById('scheduled_hour');
+    const minuteSelect = document.getElementById('scheduled_minute');
+    const timeDisplay = document.getElementById('time_display');
+    const hiddenTimeInput = document.getElementById('scheduled_time');
+    
+    if (hourSelect.value && minuteSelect.value) {
+        const hour = parseInt(hourSelect.value);
+        const minute = minuteSelect.value;
+        
+        // Update hidden input for form submission
+        hiddenTimeInput.value = `${hourSelect.value}:${minute}`;
+        
+        // Create friendly display (12-hour format)
+        let displayHour = hour;
+        let period = 'AM';
+        
+        if (hour === 0) {
+            displayHour = 12;
+        } else if (hour === 12) {
+            period = 'PM';
+        } else if (hour > 12) {
+            displayHour = hour - 12;
+            period = 'PM';
+        }
+        
+        timeDisplay.textContent = `${displayHour}:${minute} ${period}`;
+    } else {
+        timeDisplay.textContent = '';
+        hiddenTimeInput.value = '';
+    }
+}
+
+// Set smart defaults for time
+function setTimeDefaults() {
+    const hourSelect = document.getElementById('scheduled_hour');
+    const minuteSelect = document.getElementById('scheduled_minute');
+    const savedTime = '{{ scheduled_time|default:"" }}';
+    
+    if (savedTime) {
+        // Use saved values
+        const [hour, minute] = savedTime.split(':');
+        hourSelect.value = hour;
+        minuteSelect.value = minute;
+    } else {
+        // Set smart defaults
+        const now = new Date();
+        let nextHour = now.getHours();
+        let nextMinute = Math.ceil(now.getMinutes() / 15) * 15;
+        
+        // If we've passed 45 minutes, go to next hour
+        if (nextMinute === 60) {
+            nextHour = (nextHour + 1) % 24;
+            nextMinute = 0;
+        }
+        
+        hourSelect.value = String(nextHour).padStart(2, '0');
+        minuteSelect.value = String(nextMinute).padStart(2, '0');
+    }
+    
+    updateTimeDisplay();
 }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    generateTimeOptions();
+    generateHourOptions();
+    setTimeDefaults();
     
     // Set default date to today
     const dateInput = document.getElementById('scheduled_date');
@@ -281,6 +312,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const today = new Date().toISOString().split('T')[0];
         dateInput.value = today;
     }
+    
+    // Add event listeners for time changes
+    document.getElementById('scheduled_hour').addEventListener('change', updateTimeDisplay);
+    document.getElementById('scheduled_minute').addEventListener('change', updateTimeDisplay);
 });
 
 function addSpeaker(email, name) {
