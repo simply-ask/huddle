@@ -1,11 +1,11 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from .models import Meeting
 
 def join_meeting(request, meeting_id):
-    """PWA meeting room view"""
+    """Redirect to meeting room - Toaster UI simplicity"""
     meeting = get_object_or_404(Meeting, meeting_id=meeting_id, is_active=True)
-    return render(request, 'meeting/join.html', {'meeting': meeting})
+    return redirect('meeting_room', meeting_id=meeting_id)
 
 def meeting_room(request, meeting_id):
     """Main meeting room interface"""
