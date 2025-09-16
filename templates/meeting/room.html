@@ -607,22 +607,30 @@
     </div>
     
     <!-- Simple meeting header - Toaster UI -->
-    <div class="meeting-header" style="text-align: center; padding: 40px 20px;">
-        <h1 style="font-size: 32px; font-weight: 300; margin-bottom: 8px; color: #fff;">
+    <div class="meeting-header" style="text-align: center; padding: 40px 20px; background: rgba(255, 255, 255, 0.05); margin-bottom: 32px; border-radius: 12px;">
+        <h1 style="font-size: 32px; font-weight: 300; margin-bottom: 16px; color: #fff;">
             {{ meeting.title|default:"Meeting Room" }}
         </h1>
-        {% if meeting.scheduled_start %}
-            <div class="text-muted" style="font-size: 16px;">
-                <i class="fas fa-calendar" style="margin-right: 8px;"></i>
-                {{ meeting.scheduled_start|date:"M j, Y at g:i A" }}
-            </div>
-        {% endif %}
-        {% if meeting.location %}
-            <div class="text-muted" style="font-size: 16px; margin-top: 4px;">
-                <i class="fas fa-map-marker-alt" style="margin-right: 8px;"></i>
-                {{ meeting.location }}
-            </div>
-        {% endif %}
+        <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;">
+            {% if meeting.scheduled_start %}
+                <div class="text-muted" style="font-size: 16px;">
+                    <i class="fas fa-calendar" style="margin-right: 8px; color: #64a93f;"></i>
+                    {{ meeting.scheduled_start|date:"M j, Y at g:i A" }}
+                </div>
+            {% endif %}
+            {% if meeting.location %}
+                <div class="text-muted" style="font-size: 16px;">
+                    <i class="fas fa-map-marker-alt" style="margin-right: 8px; color: #64a93f;"></i>
+                    {{ meeting.location }}
+                </div>
+            {% endif %}
+            {% if not meeting.scheduled_start and not meeting.location %}
+                <div class="text-muted" style="font-size: 16px;">
+                    <i class="fas fa-video" style="margin-right: 8px; color: #64a93f;"></i>
+                    Live Meeting Session
+                </div>
+            {% endif %}
+        </div>
     </div>
     
     <!-- Simple status card - Toaster UI -->
@@ -693,10 +701,10 @@
             <div class="text-muted text-small" id="transcriptStatus">Ready</div>
         </div>
         
-        <div id="transcriptContent" style="min-height: 200px; max-height: 400px; overflow-y: auto; padding: 16px; background: rgba(0, 0, 0, 0.2); border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1);">
-            <div class="empty-state" style="text-align: center; color: rgba(255, 255, 255, 0.5); padding: 40px 20px;">
-                <i class="fas fa-microphone" style="font-size: 48px; margin-bottom: 16px; opacity: 0.3;"></i>
-                <p style="margin: 0; font-size: 16px;">Start recording to see live transcript</p>
+        <div id="transcriptContent" style="min-height: 120px; max-height: 300px; overflow-y: auto; padding: 16px; background: rgba(0, 0, 0, 0.2); border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.1);">
+            <div class="empty-state" style="text-align: center; color: rgba(255, 255, 255, 0.5); padding: 20px;">
+                <i class="fas fa-microphone" style="font-size: 32px; margin-bottom: 12px; opacity: 0.3;"></i>
+                <p style="margin: 0; font-size: 14px;">Start recording to see live transcript</p>
             </div>
         </div>
     </div>
