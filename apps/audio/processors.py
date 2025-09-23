@@ -53,6 +53,33 @@ class AudioProcessor:
             
             # Read the audio file
             audio_file_path = audio_recording.audio_file.path
+            logger.info(f"🎵 Trying to read file: {audio_file_path}")
+
+            # Check if file exists, if not try to find the actual file
+            import os
+            if not os.path.exists(audio_file_path):
+                logger.warning(f"🎵 File not found at {audio_file_path}, searching for actual file...")
+
+                # Try to find the actual file with suffix
+                import glob
+                from pathlib import Path
+
+                # Get directory and base filename
+                file_path = Path(audio_file_path)
+                directory = file_path.parent
+                base_name = file_path.stem  # filename without extension
+                extension = file_path.suffix  # .webm
+
+                # Search for files with same base name but different suffix
+                pattern = str(directory / f"{base_name}_*{extension}")
+                matching_files = glob.glob(pattern)
+
+                if matching_files:
+                    audio_file_path = matching_files[0]
+                    logger.info(f"🎵 Found actual file: {audio_file_path}")
+                else:
+                    raise FileNotFoundError(f"Audio file not found: {audio_file_path}")
+
             with open(audio_file_path, 'rb') as audio_file:
                 buffer_data = audio_file.read()
             
