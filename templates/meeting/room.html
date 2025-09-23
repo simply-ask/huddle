@@ -767,7 +767,7 @@
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
-    let isHost = {{ user.id == meeting.host.id|yesno:'true,false' }};
+    let isHost = {% if user.id == meeting.host.id %}true{% else %}false{% endif %};
     let participantCount = 0;
     let activeSpeakers = new Map();
     let isRemoteMode = false;
