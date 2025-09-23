@@ -595,10 +595,17 @@
 {% block content %}
 <div class="meeting-container">
     <!-- Role indicator -->
-    <div class="role-badge {{ user.id == meeting.host.id|yesno:'host,participant' }}" id="roleBadge">
-        <i class="fas fa-{{ user.id == meeting.host.id|yesno:'crown,eye' }}"></i>
-        {{ user.id == meeting.host.id|yesno:'Host,Viewer' }}
+    {% if user.id == meeting.host.id %}
+    <div class="role-badge host" id="roleBadge">
+        <i class="fas fa-crown"></i>
+        Host
     </div>
+    {% else %}
+    <div class="role-badge participant" id="roleBadge">
+        <i class="fas fa-eye"></i>
+        Viewer
+    </div>
+    {% endif %}
     
     <!-- Recording indicator -->
     <div class="recording-indicator" id="recordingIndicator">
