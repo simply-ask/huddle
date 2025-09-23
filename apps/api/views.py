@@ -27,6 +27,10 @@ class AudioRecordingViewSet(viewsets.ReadOnlyModelViewSet):
 @permission_classes([AllowAny])
 def upload_audio(request):
     """Handle audio file uploads from PWA clients - Admin/Host only"""
+    print(f"🎵 Audio upload request received: {request.method}")
+    print(f"🎵 Request data keys: {list(request.data.keys())}")
+    print(f"🎵 Request files: {list(request.FILES.keys())}")
+
     try:
         meeting_id = request.data.get('meeting_id')
         session_id = request.data.get('session_id')

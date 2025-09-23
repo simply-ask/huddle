@@ -9,5 +9,6 @@ router.register('recordings', views.AudioRecordingViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('upload-audio/', views.upload_audio, name='upload_audio'),
+    path('test-upload/', views.upload_audio, name='test_upload'),  # Alternative URL for testing
     path('meeting/<str:meeting_id>/status/', views.meeting_status, name='meeting_status'),
 ]
