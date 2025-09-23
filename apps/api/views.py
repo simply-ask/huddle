@@ -53,8 +53,21 @@ def upload_audio(request):
         participant = meeting.participants.filter(session_id=session_id).first()
         print(f"🎵 Found participant: {participant}")
 
+        # If no participant found, create one for the authenticated user
+        if not participant and request.user.is_authenticated:
+            print(f"🎵 Creating participant for authenticated user: {request.user}")
+            from apps.meetings.models import MeetingParticipant
+            participant = MeetingParticipant.objects.create(
+                meeting=meeting,
+                user=request.user,
+                session_id=session_id,
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                is_recording=False,
+            )
+            print(f"🎵 Created participant: {participant}")
+
         if not participant:
-            print(f"🎵 Participant not found!")
+            print(f"🎵 No participant after creation attempt!")
             return Response(
                 {'error': 'Participant not found'},
                 status=status.HTTP_404_NOT_FOUND
