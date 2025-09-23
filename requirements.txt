@@ -8,8 +8,9 @@ channels>=4.0.0
 channels-redis>=4.1.0
 
 # Celery for Background Tasks
-celery>=5.3.0
-redis>=4.5.0
+celery==5.4.0
+redis==5.1.1
+django-celery-beat==2.8.1
 
 # Database
 psycopg2-binary>=2.9.0
