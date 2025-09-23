@@ -15,6 +15,10 @@ django-celery-beat==2.8.1
 # Database
 psycopg2-binary>=2.9.0
 
+# Storage (DigitalOcean Spaces/S3)
+django-storages>=1.13.0
+boto3>=1.26.0
+
 # Audio Processing - Using Deepgram for transcription with speaker diarization
 deepgram-sdk>=4.8.0  # Transcription service with speaker identification
 # Note: Add openai>=1.0.0 later if needed for GPT-4 summaries

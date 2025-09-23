@@ -51,37 +51,41 @@ class AudioProcessor:
         try:
             logger.info(f"Starting Deepgram transcription for recording {audio_recording.id} (attempt {retry_count + 1})")
             
-            # Read the audio file
-            audio_file_path = audio_recording.audio_file.path
-            logger.info(f"🎵 Trying to read file: {audio_file_path}")
+            # Read the audio file using Django storage API (works with both local and cloud storage)
+            logger.info(f"🎵 Reading file using Django storage: {audio_recording.audio_file.name}")
 
-            # Check if file exists, if not try to find the actual file
-            import os
-            if not os.path.exists(audio_file_path):
-                logger.warning(f"🎵 File not found at {audio_file_path}, searching for actual file...")
+            from django.core.files.storage import default_storage
 
-                # Try to find the actual file with suffix
-                import glob
-                from pathlib import Path
+            # Check if file exists in storage
+            if not default_storage.exists(audio_recording.audio_file.name):
+                logger.error(f"🎵 File not found in storage: {audio_recording.audio_file.name}")
 
-                # Get directory and base filename
-                file_path = Path(audio_file_path)
-                directory = file_path.parent
-                base_name = file_path.stem  # filename without extension
-                extension = file_path.suffix  # .webm
+                # Try alternative names with suffix
+                import os
+                dir_path = os.path.dirname(audio_recording.audio_file.name)
+                base_name = os.path.basename(audio_recording.audio_file.name).replace('.webm', '')
 
-                # Search for files with same base name but different suffix
-                pattern = str(directory / f"{base_name}_*{extension}")
-                matching_files = glob.glob(pattern)
+                try:
+                    _, files = default_storage.listdir(dir_path)
+                    for f in files:
+                        if base_name in f and f.endswith('.webm'):
+                            alternative_path = os.path.join(dir_path, f)
+                            logger.info(f"🎵 Found alternative file: {alternative_path}")
+                            audio_recording.audio_file.name = alternative_path
+                            audio_recording.save()
+                            break
+                except Exception as e:
+                    logger.error(f"🎵 Cannot list directory: {e}")
+                    raise FileNotFoundError(f"Audio file not found in storage: {audio_recording.audio_file.name}")
 
-                if matching_files:
-                    audio_file_path = matching_files[0]
-                    logger.info(f"🎵 Found actual file: {audio_file_path}")
-                else:
-                    raise FileNotFoundError(f"Audio file not found: {audio_file_path}")
-
-            with open(audio_file_path, 'rb') as audio_file:
-                buffer_data = audio_file.read()
+            # Read the file from storage (works with local files, S3, Spaces, etc.)
+            try:
+                with default_storage.open(audio_recording.audio_file.name, 'rb') as audio_file:
+                    buffer_data = audio_file.read()
+                logger.info(f"🎵 Successfully read {len(buffer_data) / 1024:.1f} KB from storage")
+            except Exception as e:
+                logger.error(f"🎵 Failed to read from storage: {e}")
+                raise
             
             payload: FileSource = {
                 "buffer": buffer_data,

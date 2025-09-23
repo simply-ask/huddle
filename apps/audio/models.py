@@ -3,8 +3,13 @@ from apps.core.models import TimeStampedModel
 from apps.meetings.models import Meeting, MeetingParticipant
 
 def huddle_recording_upload_path(instance, filename):
-    """Upload path for Huddle audio recordings"""
-    return f"huddle/recordings/{instance.meeting.meeting_id}/{filename}"
+    """Upload path for Huddle audio recordings organized by user"""
+    # Organize by user ID for better structure in DigitalOcean Spaces
+    user_id = instance.meeting.host.id if instance.meeting.host else 'anonymous'
+    meeting_id = instance.meeting.meeting_id
+
+    # Create a structured path: recordings/user_X/meeting_Y/filename
+    return f"recordings/user_{user_id}/meeting_{meeting_id}/{filename}"
 
 class AudioRecording(TimeStampedModel):
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name='recordings')

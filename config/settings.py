@@ -138,9 +138,40 @@ WHITENOISE_AUTOREFRESH = DEBUG
 WHITENOISE_COMPRESS_OFFLINE = not DEBUG
 WHITENOISE_MAX_AGE = 31536000  # 1 year cache for static files
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Media files configuration
+# Use DigitalOcean Spaces in production, local storage in development
+USE_SPACES = os.environ.get('DO_SPACES_KEY') and os.environ.get('DO_SPACES_SECRET')
+
+if USE_SPACES:
+    # DigitalOcean Spaces Configuration (matching simplyAsk setup)
+    AWS_ACCESS_KEY_ID = os.environ.get('DO_SPACES_KEY')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('DO_SPACES_SECRET')
+
+    # Bucket configuration - huddle bucket in LON1
+    AWS_STORAGE_BUCKET_NAME = 'huddle'
+    AWS_S3_ENDPOINT_URL = 'https://lon1.digitaloceanspaces.com'
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.lon1.digitaloceanspaces.com'
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',  # 1 day cache
+        'ACL': 'public-read',  # Make recordings accessible via URL
+    }
+    AWS_DEFAULT_ACL = 'public-read'
+
+    # File overwrite settings
+    AWS_S3_FILE_OVERWRITE = False  # Don't overwrite files with same name
+    AWS_QUERYSTRING_AUTH = False  # Don't add auth to URLs (public files)
+
+    # Use S3 for media files
+    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
+    print(f"📦 Using DigitalOcean Spaces: {AWS_STORAGE_BUCKET_NAME}")
+else:
+    # Local file storage for development
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+    print("💾 Using local file storage")
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
