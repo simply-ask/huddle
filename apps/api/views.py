@@ -36,16 +36,25 @@ def upload_audio(request):
         session_id = request.data.get('session_id')
         audio_file = request.FILES.get('audio_file')
 
+        print(f"🎵 Parsed data - meeting_id: {meeting_id}, session_id: {session_id}, audio_file: {audio_file}")
+
         if not all([meeting_id, session_id, audio_file]):
+            print(f"🎵 Missing fields error!")
             return Response(
                 {'error': 'Missing required fields'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        print(f"🎵 Looking for meeting: {meeting_id}")
         meeting = get_object_or_404(Meeting, meeting_id=meeting_id)
+        print(f"🎵 Found meeting: {meeting}")
+
+        print(f"🎵 Looking for participant with session_id: {session_id}")
         participant = meeting.participants.filter(session_id=session_id).first()
+        print(f"🎵 Found participant: {participant}")
 
         if not participant:
+            print(f"🎵 Participant not found!")
             return Response(
                 {'error': 'Participant not found'},
                 status=status.HTTP_404_NOT_FOUND
