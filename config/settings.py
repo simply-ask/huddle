@@ -175,13 +175,20 @@ SESSION_COOKIE_SECURE = True
 # X-Frame options
 X_FRAME_OPTIONS = 'ALLOWALL'
 
-# Channels settings (WebSocket support)
+# Channels settings (WebSocket support) - TEMPORARILY DISABLED FOR TESTING
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels_redis.core.RedisChannelLayer',
+#         'CONFIG': {
+#             'hosts': [os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')],
+#         },
+#     },
+# }
+
+# Fallback to in-memory channel layer (no Redis needed for WebSockets)
 CHANNEL_LAYERS = {
     'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [os.environ.get('CELERY_BROKER_URL', 'redis://localhost:6379/0')],
-        },
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
     },
 }
 
