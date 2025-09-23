@@ -720,40 +720,9 @@
 <!-- Fixed controls bar -->
 <div class="controls-bar">
     <div class="controls-container" id="controlsContainer">
-        <!-- Recording controls (in-person mode) -->
-        <div class="recording-controls" id="recordingControls">
-            <button id="recordBtn" class="control-btn">
-                <i class="fas fa-circle" id="recordIcon"></i>
-                <span id="recordText">Start Recording</span>
-            </button>
-            <div id="recordingTimer" class="recording-timer" style="display: none;">00:00</div>
-        </div>
-        
-        <!-- Remote controls (remote mode) -->
-        <div class="remote-controls" id="remoteControls">
-            <div class="mic-control" id="micControl">
-                <i class="fas fa-microphone" id="micIcon"></i>
-                <span id="micText">Microphone</span>
-            </div>
-            
-            <div class="volume-control">
-                <i class="fas fa-volume-up"></i>
-                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="50">
-            </div>
-            
-            <div class="connection-status">
-                <div class="status-dot" id="connectionDot"></div>
-                <span id="connectionText">Connected</span>
-            </div>
-        </div>
-        
-        <!-- Participation mode toggle -->
-        <div class="participation-toggle">
-            <span>In Person</span>
-            <div class="toggle-switch" id="participationToggle">
-                <div class="toggle-handle"></div>
-            </div>
-            <span>Remote</span>
+        <!-- Controls will be populated by JavaScript based on user role -->
+        <div style="text-align: center; padding: 20px;">
+            <div style="color: rgba(255, 255, 255, 0.6);">Loading...</div>
         </div>
     </div>
 </div>
@@ -790,14 +759,15 @@
         
         socket.onopen = function(e) {
             console.log('WebSocket connected');
-            
+            console.log('User is host:', isHost);
+
             socket.send(JSON.stringify({
                 'type': 'join',
                 'meeting_id': meetingId,
                 'role': isHost ? 'host' : 'participant',
                 'device_type': detectDeviceType()
             }));
-            
+
             updateUI();
         };
         
@@ -868,9 +838,16 @@
 
     // Update UI based on user role - ADMIN-ONLY RECORDING
     function updateUI() {
+        console.log('updateUI called, isHost:', isHost);
         const controlsContainer = document.getElementById('controlsContainer');
 
+        if (!controlsContainer) {
+            console.error('Controls container not found!');
+            return;
+        }
+
         if (isHost) {
+            console.log('Setting up HOST controls');
             // HOST/ADMIN: Full recording controls
             controlsContainer.innerHTML = `
                 <button id="startRecordingBtn" class="control-btn control-btn-record">
@@ -892,9 +869,11 @@
             document.getElementById('endMeetingBtn').addEventListener('click', endMeeting);
 
             // Show speaker management
-            document.getElementById('speakerManagement').classList.add('visible');
+            const speakerMgmt = document.getElementById('speakerManagement');
+            if (speakerMgmt) speakerMgmt.classList.add('visible');
 
         } else {
+            console.log('Setting up PARTICIPANT controls');
             // PARTICIPANT: View-only mode
             controlsContainer.innerHTML = `
                 <div style="text-align: center; width: 100%;">
@@ -912,7 +891,8 @@
             document.getElementById('leaveMeetingBtn').addEventListener('click', leaveMeeting);
 
             // Hide speaker management for participants
-            document.getElementById('speakerManagement').style.display = 'none';
+            const speakerMgmt = document.getElementById('speakerManagement');
+            if (speakerMgmt) speakerMgmt.style.display = 'none';
         }
     }
 
@@ -1338,6 +1318,10 @@
 
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded - isHost:', isHost);
+
+        // Update UI immediately, then connect WebSocket
+        updateUI();
         connectWebSocket();
         loadKnownSpeakers();
         
