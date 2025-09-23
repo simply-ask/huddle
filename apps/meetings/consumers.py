@@ -24,8 +24,10 @@ class MeetingConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type')
-        
-        if message_type == 'participant_joined':
+
+        if message_type == 'join':
+            await self.handle_join_meeting(data)
+        elif message_type == 'participant_joined':
             await self.handle_participant_joined(data)
         elif message_type == 'audio_quality_update':
             await self.handle_audio_quality_update(data)
@@ -101,6 +103,32 @@ class MeetingConsumer(AsyncWebsocketConsumer):
             }
         )
     
+    async def handle_join_meeting(self, data):
+        """Handle user joining meeting - create/update MeetingParticipant record"""
+        meeting_id = data.get('meeting_id')
+        role = data.get('role', 'participant')
+        device_type = data.get('device_type', 'unknown')
+
+        # Get or create participant record
+        participant = await self.get_or_create_participant(
+            meeting_id,
+            role,
+            device_type
+        )
+
+        if participant:
+            # Notify group about new participant
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    'type': 'participant_joined_message',
+                    'participant_id': str(participant.id),
+                    'participant_name': participant.user.get_full_name() if participant.user else 'Guest',
+                    'role': role,
+                    'is_host': participant.user and participant.meeting.host == participant.user,
+                }
+            )
+
     async def handle_mic_status(self, data):
         """Handle microphone mute/unmute status"""
         await self.channel_layer.group_send(
@@ -120,3 +148,40 @@ class MeetingConsumer(AsyncWebsocketConsumer):
     
     async def mic_status_message(self, event):
         await self.send(text_data=json.dumps(event))
+
+    @database_sync_to_async
+    def get_or_create_participant(self, meeting_id, role, device_type):
+        """Get or create MeetingParticipant record for current user"""
+        try:
+            meeting = Meeting.objects.get(meeting_id=meeting_id, is_active=True)
+            user = self.scope.get('user')
+
+            # Generate session ID based on user and timestamp
+            import uuid
+            import time
+            session_id = f"{user.id if user and user.is_authenticated else 'guest'}_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+
+            # Create or get participant
+            participant, created = MeetingParticipant.objects.get_or_create(
+                meeting=meeting,
+                session_id=session_id,
+                defaults={
+                    'user': user if user and user.is_authenticated else None,
+                    'user_agent': device_type,
+                    'is_recording': False,
+                    'audio_quality_score': None,
+                }
+            )
+
+            # For existing participants, update user if they weren't linked before
+            if not created and not participant.user and user and user.is_authenticated:
+                participant.user = user
+                participant.save()
+
+            return participant
+
+        except Meeting.DoesNotExist:
+            return None
+        except Exception as e:
+            print(f"Error creating participant: {e}")
+            return None

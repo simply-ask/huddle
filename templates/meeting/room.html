@@ -859,11 +859,12 @@
         }
     }
 
-    // Update UI based on user role
+    // Update UI based on user role - ADMIN-ONLY RECORDING
     function updateUI() {
         const controlsContainer = document.getElementById('controlsContainer');
-        
+
         if (isHost) {
+            // HOST/ADMIN: Full recording controls
             controlsContainer.innerHTML = `
                 <button id="startRecordingBtn" class="control-btn control-btn-record">
                     <i class="fas fa-circle"></i>
@@ -878,20 +879,21 @@
                     End Meeting
                 </button>
             `;
-            
+
             document.getElementById('startRecordingBtn').addEventListener('click', startRecording);
             document.getElementById('stopRecordingBtn').addEventListener('click', stopRecording);
             document.getElementById('endMeetingBtn').addEventListener('click', endMeeting);
-            
+
             // Show speaker management
             document.getElementById('speakerManagement').classList.add('visible');
-            
+
         } else {
+            // PARTICIPANT: View-only mode
             controlsContainer.innerHTML = `
-                <div style="text-align: center;">
-                    <div class="text-muted mb-10">
-                        <i class="fas fa-eye"></i>
-                        You're viewing this meeting
+                <div style="text-align: center; width: 100%;">
+                    <div class="text-muted mb-10" style="font-size: 14px; opacity: 0.8;">
+                        <i class="fas fa-eye" style="margin-right: 8px;"></i>
+                        Viewing meeting - Only the admin can record
                     </div>
                     <button id="leaveMeetingBtn" class="control-btn control-btn-leave">
                         <i class="fas fa-sign-out-alt"></i>
@@ -899,8 +901,11 @@
                     </button>
                 </div>
             `;
-            
+
             document.getElementById('leaveMeetingBtn').addEventListener('click', leaveMeeting);
+
+            // Hide speaker management for participants
+            document.getElementById('speakerManagement').style.display = 'none';
         }
     }
 
@@ -1237,12 +1242,18 @@
         }
     }
 
-    // Upload audio to server
+    // Upload audio to server - ADMIN ONLY
     async function uploadAudio(audioBlob) {
+        if (!isHost) {
+            console.error('Upload blocked: Only admin can upload recordings');
+            return;
+        }
+
         const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.webm');
+        formData.append('audio_file', audioBlob, 'recording.webm');
         formData.append('meeting_id', meetingId);
-        
+        formData.append('session_id', '{{ user.id }}'); // Use user ID as session ID for authenticated users
+
         try {
             const response = await fetch('/api/upload-audio/', {
                 method: 'POST',
@@ -1251,9 +1262,17 @@
                     'X-CSRFToken': getCookie('csrftoken')
                 }
             });
-            
+
             if (response.ok) {
                 console.log('Audio uploaded successfully');
+                const data = await response.json();
+                console.log('Recording queued for processing:', data.recording_id);
+            } else {
+                const errorData = await response.json();
+                console.error('Upload failed:', errorData.error);
+                if (response.status === 403) {
+                    alert('Only the meeting admin can record audio.');
+                }
             }
         } catch (error) {
             console.error('Error uploading audio:', error);

@@ -26,25 +26,32 @@ class AudioRecordingViewSet(viewsets.ReadOnlyModelViewSet):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def upload_audio(request):
-    """Handle audio file uploads from PWA clients"""
+    """Handle audio file uploads from PWA clients - Admin/Host only"""
     try:
         meeting_id = request.data.get('meeting_id')
         session_id = request.data.get('session_id')
         audio_file = request.FILES.get('audio_file')
-        
+
         if not all([meeting_id, session_id, audio_file]):
             return Response(
-                {'error': 'Missing required fields'}, 
+                {'error': 'Missing required fields'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         meeting = get_object_or_404(Meeting, meeting_id=meeting_id)
         participant = meeting.participants.filter(session_id=session_id).first()
-        
+
         if not participant:
             return Response(
-                {'error': 'Participant not found'}, 
+                {'error': 'Participant not found'},
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+        # ADMIN-ONLY RECORDING: Only the meeting host can upload recordings
+        if not participant.user or participant.user != meeting.host:
+            return Response(
+                {'error': 'Only the meeting admin can record'},
+                status=status.HTTP_403_FORBIDDEN
             )
         
         # Create audio recording
