@@ -117,15 +117,19 @@ class MeetingConsumer(AsyncWebsocketConsumer):
         )
 
         if participant:
+            # Get host info safely
+            is_host = await self.check_is_host(participant)
+            participant_name = await self.get_participant_name(participant)
+
             # Notify group about new participant
             await self.channel_layer.group_send(
                 self.room_group_name,
                 {
                     'type': 'participant_joined_message',
                     'participant_id': str(participant.id),
-                    'participant_name': participant.user.get_full_name() if participant.user else 'Guest',
+                    'participant_name': participant_name,
                     'role': role,
-                    'is_host': participant.user and participant.meeting.host == participant.user,
+                    'is_host': is_host,
                 }
             )
 
@@ -185,3 +189,21 @@ class MeetingConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print(f"Error creating participant: {e}")
             return None
+
+    @database_sync_to_async
+    def check_is_host(self, participant):
+        """Check if participant is the meeting host"""
+        try:
+            return participant.user and participant.meeting.host == participant.user
+        except Exception:
+            return False
+
+    @database_sync_to_async
+    def get_participant_name(self, participant):
+        """Get participant display name"""
+        try:
+            if participant.user:
+                return participant.user.get_full_name() or participant.user.username
+            return 'Guest'
+        except Exception:
+            return 'Guest'
