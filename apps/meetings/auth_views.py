@@ -43,7 +43,7 @@ def dashboard_view(request):
     
     # Statistics
     total_meetings = meetings.count()
-    active_meetings = meetings.filter(is_active=True).count()
+    active_meetings = meetings.filter(status=Meeting.Status.ACTIVE).count()
     recent_meetings = meetings[:5]
     
     # Speaker statistics
@@ -56,7 +56,7 @@ def dashboard_view(request):
     # Upcoming meetings (if started_at is used for scheduling)
     upcoming = meetings.filter(
         started_at__gte=timezone.now(),
-        is_active=True
+        status=Meeting.Status.ACTIVE
     ).order_by('started_at')[:5]
     
     context = {
@@ -86,9 +86,9 @@ def meetings_list_view(request):
     # Filter by status
     status = request.GET.get('status', '')
     if status == 'active':
-        meetings = meetings.filter(is_active=True)
+        meetings = meetings.filter(status=Meeting.Status.ACTIVE)
     elif status == 'inactive':
-        meetings = meetings.filter(is_active=False)
+        meetings = meetings.filter(status=Meeting.Status.COMPLETED)
     
     meetings = meetings.order_by('-created_at')
     
@@ -110,7 +110,7 @@ def speakers_view(request):
     """View all speaker profiles"""
     speakers = SpeakerProfile.objects.filter(
         organization=request.user,
-        is_active=True  # Only show active profiles
+        status=Meeting.Status.ACTIVE  # Only show active profiles
     ).order_by('-created_at')
     
     # Search
