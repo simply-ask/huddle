@@ -1,3 +1,4 @@
+import secrets
 from django.db import models
 from django.contrib.auth.models import User
 from apps.core.models import TimeStampedModel, SpeakerProfile
@@ -151,7 +152,82 @@ class MeetingParticipant(TimeStampedModel):
     is_recording = models.BooleanField(default=False)
     audio_quality_score = models.FloatField(null=True, blank=True)
     last_seen = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         db_table = 'huddle_meeting_participant'
         unique_together = ['meeting', 'session_id']
+
+
+def generate_secure_token():
+    """Generate a secure random token for meeting access"""
+    return secrets.token_urlsafe(32)  # 32 bytes = 256 bits of entropy
+
+
+class MeetingAccessToken(TimeStampedModel):
+    """Secure access tokens for viewing meeting content without login"""
+    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name='access_tokens')
+    email = models.EmailField(help_text="Email address this token is for")
+    token = models.CharField(
+        max_length=64,
+        unique=True,
+        default=generate_secure_token,
+        help_text="Secure random token for URL access"
+    )
+
+    # Permissions
+    can_view_transcript = models.BooleanField(default=True)
+    can_view_minutes = models.BooleanField(default=True)
+    can_view_action_items = models.BooleanField(default=True)
+
+    # Security
+    is_active = models.BooleanField(default=True, help_text="Token can be deactivated")
+    expires_at = models.DateTimeField(null=True, blank=True, help_text="Optional expiry date")
+    last_accessed = models.DateTimeField(null=True, blank=True)
+    access_count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        db_table = 'huddle_meeting_access_token'
+        unique_together = ['meeting', 'email']
+        indexes = [
+            models.Index(fields=['token']),
+            models.Index(fields=['meeting', 'email']),
+        ]
+
+    def __str__(self):
+        return f"{self.meeting.meeting_id} - {self.email}"
+
+    def is_valid(self):
+        """Check if token is still valid"""
+        from django.utils import timezone
+
+        if not self.is_active:
+            return False
+
+        if self.expires_at and self.expires_at < timezone.now():
+            return False
+
+        return True
+
+    def record_access(self):
+        """Record that this token was used"""
+        from django.utils import timezone
+
+        self.last_accessed = timezone.now()
+        self.access_count += 1
+        self.save(update_fields=['last_accessed', 'access_count'])
+
+    def get_magic_link(self, view_type='minutes'):
+        """Generate the magic link URL for this token"""
+        from django.urls import reverse
+        base_url = 'https://huddle.spot'  # You can make this configurable
+
+        if view_type == 'minutes':
+            path = f"/meeting/{self.meeting.meeting_id}/minutes/"
+        elif view_type == 'transcript':
+            path = f"/meeting/{self.meeting.meeting_id}/transcript/"
+        elif view_type == 'actions':
+            path = f"/meeting/{self.meeting.meeting_id}/actions/"
+        else:
+            path = f"/meeting/{self.meeting.meeting_id}/summary/"
+
+        return f"{base_url}{path}?token={self.token}"

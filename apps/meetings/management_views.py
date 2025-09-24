@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
 import json
-from .models import Meeting
+from .models import Meeting, MeetingAccessToken
 from .email_utils import send_voice_setup_invitation, send_meeting_invitation
 from apps.core.models import SpeakerProfile
 
@@ -81,11 +81,24 @@ def create_meeting_view(request):
         
         messages.success(request, f'Meeting "{meeting.title}" created successfully! Meeting ID: {meeting.meeting_id}')
         
+        # Create access tokens for all attendees
+        if attendee_list:
+            for email in attendee_list:
+                MeetingAccessToken.objects.get_or_create(
+                    meeting=meeting,
+                    email=email,
+                    defaults={
+                        'can_view_transcript': True,
+                        'can_view_minutes': True,
+                        'can_view_action_items': True
+                    }
+                )
+
         # Send invitations if requested
         if send_invites and attendee_list:
             sent_count = 0
             failed_count = 0
-            
+
             for email in attendee_list:
                 success, message = send_voice_setup_invitation(meeting, email)
                 if success:
@@ -170,7 +183,19 @@ def add_attendees_view(request, meeting_id):
             )
             for profile in existing_profiles:
                 meeting.known_speakers.add(profile)
-            
+
+            # Create access tokens for new attendees
+            for email in added_emails:
+                MeetingAccessToken.objects.get_or_create(
+                    meeting=meeting,
+                    email=email,
+                    defaults={
+                        'can_view_transcript': True,
+                        'can_view_minutes': True,
+                        'can_view_action_items': True
+                    }
+                )
+
             # Send invitations if requested
             if send_invites:
                 for email in added_emails:

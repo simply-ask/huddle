@@ -55,6 +55,18 @@ def send_voice_setup_invitation(meeting, email, host_name=None):
         # Generate voice setup URL
         setup_url = f"{settings.SITE_URL}/meet/{meeting.meeting_id}/voice-setup/?email={email}&token={token}"
         
+        # Get or create meeting access token for magic links
+        from .models import MeetingAccessToken
+        access_token, created = MeetingAccessToken.objects.get_or_create(
+            meeting=meeting,
+            email=email,
+            defaults={
+                'can_view_transcript': True,
+                'can_view_minutes': True,
+                'can_view_action_items': True
+            }
+        )
+
         # Prepare context for email template
         context = {
             'meeting': meeting,
@@ -62,6 +74,9 @@ def send_voice_setup_invitation(meeting, email, host_name=None):
             'recipient_name': Meeting.extract_name_from_email(email),
             'host_name': host_name or (meeting.host.get_full_name() if meeting.host else 'Meeting Host'),
             'setup_url': setup_url,
+            'minutes_link': access_token.get_magic_link('minutes'),
+            'transcript_link': access_token.get_magic_link('transcript'),
+            'actions_link': access_token.get_magic_link('actions'),
             'expires_days': 7,
             'site_name': 'Huddle',
         }

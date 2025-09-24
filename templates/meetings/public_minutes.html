@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Meeting Minutes - {{ meeting.title|default:"Meeting" }} | huddle{% endblock %}
+
+{% block content %}
+
+<!-- Public Header -->
+<div class="header">
+    <div class="flex-between">
+        <div>
+            <h1 style="font-size: 20px; margin-bottom: 4px; font-weight: 500;">{{ meeting.title|default:"Untitled Meeting" }}</h1>
+            <div class="text-muted text-small">
+                Meeting {{ meeting.meeting_id }} • {{ meeting.created_at|date:"M j, Y" }}
+                {% if participant_email %} • Shared with {{ participant_email }}{% endif %}
+            </div>
+        </div>
+
+        <div>
+            {% if has_ai_processed %}
+                <div class="status status-active">
+                    <i class="fas fa-check-circle"></i>
+                    Complete
+                </div>
+            {% else %}
+                <div class="status status-pending">
+                    <i class="fas fa-clock"></i>
+                    Processing
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if has_ai_processed and summary %}
+    <!-- AI-Processed Meeting Minutes -->
+    <div class="card">
+        <div class="flex gap-10 mb-20" style="align-items: center;">
+            <i class="fas fa-brain" style="color: #007bff;"></i>
+            <h2 style="font-size: 18px; font-weight: 600; margin: 0;">Meeting Minutes</h2>
+        </div>
+
+        <!-- Executive Summary -->
+        {% if summary.executive_summary %}
+            <div style="margin-bottom: 32px;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #495057;">
+                    <i class="fas fa-file-alt"></i>
+                    Executive Summary
+                </h3>
+                <div style="line-height: 1.7; padding: 16px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                    {{ summary.executive_summary }}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Key Points -->
+        {% if summary.key_points %}
+            <div style="margin-bottom: 32px;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #495057;">
+                    <i class="fas fa-lightbulb"></i>
+                    Key Discussion Points
+                </h3>
+                <ul style="margin: 0; padding-left: 20px; line-height: 1.7;">
+                    {% for point in summary.key_points %}
+                        <li style="margin-bottom: 8px;">{{ point }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- Action Items -->
+        {% if summary.action_items %}
+            <div style="margin-bottom: 32px;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #495057;">
+                    <i class="fas fa-tasks"></i>
+                    Action Items
+                </h3>
+                <div style="display: grid; gap: 12px;">
+                    {% for item in summary.action_items %}
+                        <div style="padding: 16px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                            <div style="font-weight: 500; margin-bottom: 4px;">{{ item.task }}</div>
+                            <div class="text-muted text-small">
+                                {% if item.owner and item.owner != "TBD" %}
+                                    <i class="fas fa-user"></i> {{ item.owner }}
+                                {% endif %}
+                                {% if item.due_date and item.due_date != "TBD" %}
+                                    • <i class="fas fa-calendar"></i> {{ item.due_date }}
+                                {% endif %}
+                                {% if item.priority %}
+                                    • <i class="fas fa-flag"></i> {{ item.priority|title }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Decisions Made -->
+        {% if summary.decisions_made %}
+            <div style="margin-bottom: 32px;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #495057;">
+                    <i class="fas fa-check-circle"></i>
+                    Decisions Made
+                </h3>
+                <ul style="margin: 0; padding-left: 20px; line-height: 1.7;">
+                    {% for decision in summary.decisions_made %}
+                        <li style="margin-bottom: 8px; padding: 8px; background: #d1e7dd; border-radius: 4px; list-style: none; margin-left: -20px; padding-left: 20px;">
+                            <i class="fas fa-check" style="color: #198754; margin-right: 8px;"></i>
+                            {{ decision }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <!-- View other formats -->
+        <div style="border-top: 1px solid #dee2e6; padding-top: 20px; display: flex; gap: 12px;">
+            <a href="{% url 'public_meeting_transcript' meeting.meeting_id %}?token={{ request.GET.token }}" class="btn-secondary">
+                <i class="fas fa-file-text"></i>
+                View Full Transcript
+            </a>
+            <a href="{% url 'public_meeting_actions' meeting.meeting_id %}?token={{ request.GET.token }}" class="btn-secondary">
+                <i class="fas fa-tasks"></i>
+                View Your Action Items
+            </a>
+        </div>
+    </div>
+{% else %}
+    <!-- Processing or No Minutes Yet -->
+    <div class="card" style="text-align: center; padding: 60px 20px;">
+        <i class="fas fa-cog fa-spin" style="font-size: 48px; margin-bottom: 20px; opacity: 0.3;"></i>
+        <h3 style="margin-bottom: 12px;">Minutes Being Prepared</h3>
+        <p class="text-muted">The meeting minutes are still being processed. Please check back later.</p>
+    </div>
+{% endif %}
+
+{% endblock %}

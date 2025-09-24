@@ -29,6 +29,7 @@ from apps.meetings import management_views
 from apps.meetings import debug_views
 from apps.meetings import transcript_views
 from apps.meetings import agenda_views
+from apps.meetings import public_views
 import os
 
 def home_view(request):
@@ -143,6 +144,12 @@ urlpatterns = [
     # Meeting Room (Public)
     path('meet/<str:meeting_id>/', meeting_views.join_meeting, name='join_meeting'),
     path('meet/<str:meeting_id>/room/', meeting_views.meeting_room, name='meeting_room'),
+
+    # Public Meeting Views (Token-based access)
+    path('meeting/<str:meeting_id>/minutes/', public_views.public_meeting_minutes_view, name='public_meeting_minutes'),
+    path('meeting/<str:meeting_id>/transcript/', public_views.public_meeting_transcript_view, name='public_meeting_transcript'),
+    path('meeting/<str:meeting_id>/actions/', public_views.public_meeting_actions_view, name='public_meeting_actions'),
+    path('meeting/<str:meeting_id>/summary/', public_views.public_meeting_summary_view, name='public_meeting_summary'),
     
     # Voice Setup (Public)
     path('meet/<str:meeting_id>/voice-setup/', voice_views.voice_setup_view, name='voice_setup'),
