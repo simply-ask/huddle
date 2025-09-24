@@ -42,7 +42,10 @@ def verify_setup_token(meeting_id, email, token):
 
 def voice_setup_view(request, meeting_id):
     """Pre-meeting voice setup page"""
-    meeting = get_object_or_404(Meeting, meeting_id=meeting_id, status=Meeting.Status.ACTIVE)
+    meeting = get_object_or_404(Meeting, meeting_id=meeting_id)
+    # Don't allow voice setup for completed meetings
+    if meeting.status == Meeting.Status.COMPLETED:
+        return render(request, 'meeting/meeting_ended.html', {'meeting': meeting})
     email = request.GET.get('email')
     token = request.GET.get('token')
     
@@ -82,7 +85,10 @@ def voice_setup_view(request, meeting_id):
 @require_http_methods(["POST"])
 def process_voice_setup(request, meeting_id):
     """Process voice setup form submission"""
-    meeting = get_object_or_404(Meeting, meeting_id=meeting_id, status=Meeting.Status.ACTIVE)
+    meeting = get_object_or_404(Meeting, meeting_id=meeting_id)
+    # Don't allow voice setup for completed meetings
+    if meeting.status == Meeting.Status.COMPLETED:
+        return render(request, 'meeting/meeting_ended.html', {'meeting': meeting})
     
     try:
         email = request.POST.get('email')
@@ -148,7 +154,10 @@ def process_voice_setup(request, meeting_id):
 
 def voice_setup_complete_view(request, meeting_id):
     """Voice setup completion page"""
-    meeting = get_object_or_404(Meeting, meeting_id=meeting_id, status=Meeting.Status.ACTIVE)
+    meeting = get_object_or_404(Meeting, meeting_id=meeting_id)
+    # Don't allow voice setup for completed meetings
+    if meeting.status == Meeting.Status.COMPLETED:
+        return render(request, 'meeting/meeting_ended.html', {'meeting': meeting})
     email = request.GET.get('email')
     
     # Try to find the speaker profile
@@ -182,7 +191,10 @@ def analyze_voice_sample(audio_file):
 
 def meeting_speaker_status(request, meeting_id):
     """API endpoint to get speaker setup status for a meeting"""
-    meeting = get_object_or_404(Meeting, meeting_id=meeting_id, status=Meeting.Status.ACTIVE)
+    meeting = get_object_or_404(Meeting, meeting_id=meeting_id)
+    # Don't allow voice setup for completed meetings
+    if meeting.status == Meeting.Status.COMPLETED:
+        return render(request, 'meeting/meeting_ended.html', {'meeting': meeting})
     
     known_speakers = []
     for speaker in meeting.known_speakers.all():

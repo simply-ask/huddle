@@ -157,7 +157,13 @@ class MeetingConsumer(AsyncWebsocketConsumer):
     def get_or_create_participant(self, meeting_id, role, device_type):
         """Get or create MeetingParticipant record for current user"""
         try:
-            meeting = Meeting.objects.get(meeting_id=meeting_id, status=Meeting.Status.ACTIVE)
+            meeting = Meeting.objects.get(meeting_id=meeting_id)
+            # Don't allow WebSocket connections to completed meetings
+            if meeting.status == Meeting.Status.COMPLETED:
+                raise Meeting.DoesNotExist('Meeting is completed')
+            # Auto-start scheduled meetings
+            if meeting.status == Meeting.Status.SCHEDULED:
+                meeting.start_meeting()
             user = self.scope.get('user')
 
             # Generate session ID based on user and timestamp
