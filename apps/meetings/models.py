@@ -106,6 +106,33 @@ class Meeting(TimeStampedModel):
         # Convert john.smith -> John Smith
         return ' '.join(word.capitalize() for word in name_part.replace('.', ' ').replace('_', ' ').split())
 
+
+class AgendaItem(TimeStampedModel):
+    """Agenda items for structured meetings"""
+    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name='agenda_items')
+    title = models.CharField(max_length=200, help_text="Agenda item title")
+    assigned_participant = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Email of participant assigned to this agenda item"
+    )
+    order = models.PositiveIntegerField(default=0, help_text="Display order of agenda item")
+
+    class Meta:
+        db_table = 'huddle_agenda_item'
+        ordering = ['order', 'created_at']
+
+    def __str__(self):
+        return f"{self.meeting.meeting_id}: {self.title}"
+
+    @property
+    def participant_name(self):
+        """Get friendly name for assigned participant"""
+        if not self.assigned_participant:
+            return None
+        return Meeting.extract_name_from_email(self.assigned_participant)
+
+
 class MeetingParticipant(TimeStampedModel):
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name='participants')
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, help_text="Linked user if authenticated")

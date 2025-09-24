@@ -1285,12 +1285,15 @@
     // End meeting (host only)
     function endMeeting() {
         if (!isHost) return;
-        
-        if (confirm('Are you sure you want to end the meeting for everyone?')) {
+
+        const confirmMessage = 'End this meeting?\n\n' +
+            'The meeting will be closed for all participants and the draft minutes and action points will be created for review.';
+
+        if (confirm(confirmMessage)) {
             if (isRecording) {
                 stopRecording();
             }
-            
+
             if (socket) {
                 socket.send(JSON.stringify({
                     'type': 'meeting_ended',
@@ -1298,7 +1301,7 @@
                 }));
                 socket.close();
             }
-            
+
             window.location.href = '/dashboard/';
         }
     }

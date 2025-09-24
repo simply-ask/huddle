@@ -48,6 +48,27 @@
 </div>
 
 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+    <!-- Agenda Management -->
+    <div class="card">
+        <div class="flex-between mb-20">
+            <h3 style="font-size: 18px; font-weight: 500;">Meeting Agenda</h3>
+            <button onclick="showAddAgendaModal()" class="btn">
+                <i class="fas fa-plus"></i>
+                Add Item
+            </button>
+        </div>
+
+        <div id="agenda-items" class="agenda-items">
+            <!-- Agenda items will be loaded here -->
+        </div>
+
+        <div id="empty-agenda" style="text-align: center; padding: 40px; color: #666; display: none;">
+            <i class="fas fa-list-ul" style="font-size: 32px; margin-bottom: 12px; opacity: 0.5;"></i>
+            <div>No agenda items yet</div>
+            <div class="text-small text-muted">Add items to structure your meeting</div>
+        </div>
+    </div>
+
     <!-- Attendee Management -->
     <div class="card">
         <div class="flex-between mb-20">
@@ -398,5 +419,297 @@ document.getElementById('addAttendeeModal').addEventListener('click', function(e
         closeAddAttendeeModal();
     }
 });
+
+// ===== AGENDA MANAGEMENT =====
+
+// Load agenda items
+function loadAgenda() {
+    fetch(`/api/meetings/{{ meeting.meeting_id }}/agenda/`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('agenda-items');
+            const emptyState = document.getElementById('empty-agenda');
+
+            if (data.agenda_items.length === 0) {
+                container.innerHTML = '';
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                renderAgendaItems(data.agenda_items);
+                initializeDragAndDrop();
+            }
+        })
+        .catch(error => console.error('Error loading agenda:', error));
+}
+
+// Render agenda items
+function renderAgendaItems(items) {
+    const container = document.getElementById('agenda-items');
+    container.innerHTML = items.map(item => `
+        <div class="agenda-item" data-id="${item.id}">
+            <div class="agenda-handle">
+                <i class="fas fa-grip-vertical"></i>
+            </div>
+            <div class="agenda-content">
+                <div class="agenda-title">${item.title}</div>
+                ${item.participant_name ? `<div class="agenda-participant">${item.participant_name}</div>` : ''}
+            </div>
+            <div class="agenda-actions">
+                <button onclick="deleteAgendaItem(${item.id})" class="btn-icon" title="Delete">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Show add agenda modal
+function showAddAgendaModal() {
+    const modal = document.getElementById('addAgendaModal');
+    modal.style.display = 'flex';
+    document.getElementById('agendaTitle').focus();
+}
+
+// Close add agenda modal
+function closeAddAgendaModal() {
+    document.getElementById('addAgendaModal').style.display = 'none';
+    document.getElementById('addAgendaForm').reset();
+}
+
+// Add agenda item
+function addAgendaItem() {
+    const form = document.getElementById('addAgendaForm');
+    const formData = new FormData(form);
+
+    fetch(`/api/meetings/{{ meeting.meeting_id }}/agenda/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeAddAgendaModal();
+            loadAgenda();
+        } else {
+            alert(data.error || 'Failed to add agenda item');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding agenda item:', error);
+        alert('Error adding agenda item');
+    });
+}
+
+// Delete agenda item
+function deleteAgendaItem(itemId) {
+    if (confirm('Delete this agenda item?')) {
+        fetch(`/api/meetings/{{ meeting.meeting_id }}/agenda/${itemId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadAgenda();
+            } else {
+                alert(data.error || 'Failed to delete agenda item');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting agenda item:', error);
+            alert('Error deleting agenda item');
+        });
+    }
+}
+
+// Initialize drag and drop
+function initializeDragAndDrop() {
+    const container = document.getElementById('agenda-items');
+    let draggedElement = null;
+
+    container.addEventListener('dragstart', function(e) {
+        if (e.target.classList.contains('agenda-item')) {
+            draggedElement = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+    });
+
+    container.addEventListener('dragend', function(e) {
+        if (e.target.classList.contains('agenda-item')) {
+            e.target.classList.remove('dragging');
+            draggedElement = null;
+        }
+    });
+
+    container.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(container, e.clientY);
+        if (afterElement == null) {
+            container.appendChild(draggedElement);
+        } else {
+            container.insertBefore(draggedElement, afterElement);
+        }
+    });
+
+    container.addEventListener('drop', function(e) {
+        e.preventDefault();
+        updateAgendaOrder();
+    });
+
+    // Make items draggable
+    const items = container.querySelectorAll('.agenda-item');
+    items.forEach(item => {
+        item.draggable = true;
+    });
+}
+
+// Get element after drag position
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.agenda-item:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Update agenda order after drag
+function updateAgendaOrder() {
+    const items = document.querySelectorAll('.agenda-item');
+    const order = Array.from(items).map((item, index) => ({
+        id: item.dataset.id,
+        order: index
+    }));
+
+    fetch(`/api/meetings/{{ meeting.meeting_id }}/agenda/reorder/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({ order: order })
+    })
+    .catch(error => console.error('Error updating order:', error));
+}
+
+// Load agenda on page load
+loadAgenda();
 </script>
+
+<!-- Add Agenda Modal -->
+<div id="addAgendaModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Add Agenda Item</h3>
+            <button onclick="closeAddAgendaModal()" class="btn-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="addAgendaForm" onsubmit="event.preventDefault(); addAgendaItem();">
+            <div class="form-group">
+                <label for="agendaTitle">Agenda Item Title</label>
+                <input type="text" id="agendaTitle" name="title" required placeholder="e.g. Budget Review Q4">
+            </div>
+
+            <div class="form-group">
+                <label for="agendaParticipant">Assigned To (Optional)</label>
+                <select id="agendaParticipant" name="assigned_participant">
+                    <option value="">No one assigned</option>
+                    {% for attendee in attendee_status %}
+                        <option value="{{ attendee.email }}">{{ attendee.name }} ({{ attendee.email }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" onclick="closeAddAgendaModal()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn">Add Item</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.agenda-items {
+    min-height: 100px;
+}
+
+.agenda-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    cursor: move;
+    transition: all 0.2s ease;
+}
+
+.agenda-item:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.agenda-item.dragging {
+    opacity: 0.5;
+    transform: rotate(5deg);
+}
+
+.agenda-handle {
+    margin-right: 12px;
+    color: #666;
+    cursor: grab;
+}
+
+.agenda-handle:active {
+    cursor: grabbing;
+}
+
+.agenda-content {
+    flex: 1;
+}
+
+.agenda-title {
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.agenda-participant {
+    font-size: 12px;
+    color: #666;
+}
+
+.agenda-actions {
+    margin-left: 12px;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    padding: 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+    background: #dc3545;
+    color: white;
+}
+</style>
 {% endblock %}
