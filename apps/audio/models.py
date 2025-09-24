@@ -54,12 +54,30 @@ class TranscriptionSegment(TimeStampedModel):
 class MeetingSummary(TimeStampedModel):
     """AI-generated meeting summary and insights"""
     meeting = models.OneToOneField(Meeting, on_delete=models.CASCADE, related_name='summary')
-    full_transcript = models.TextField(blank=True)
-    summary = models.TextField(blank=True)
-    key_points = models.JSONField(default=list, help_text="List of key discussion points")
-    action_items = models.JSONField(default=list, help_text="List of action items with assignees")
+
+    # Transcript versions
+    raw_transcript = models.TextField(blank=True, help_text="Original verbatim transcript from Deepgram")
+    clean_transcript = models.TextField(blank=True, help_text="AI-cleaned and formatted transcript")
+
+    # Meeting analysis
+    executive_summary = models.TextField(blank=True, help_text="High-level meeting summary")
+    key_points = models.JSONField(default=list, help_text="Key discussion points")
+    action_items = models.JSONField(default=list, help_text="Action items with owners and due dates")
+    decisions_made = models.JSONField(default=list, help_text="Decisions reached during the meeting")
+
+    # Participants and engagement
     participants_summary = models.JSONField(default=dict, help_text="Speaking time and participation stats")
     sentiment_analysis = models.JSONField(default=dict, help_text="Overall meeting sentiment")
+
+    # Processing status
+    is_ai_processed = models.BooleanField(default=False, help_text="Whether AI cleanup and analysis is complete")
+    ai_processing_started_at = models.DateTimeField(null=True, blank=True)
+    ai_processing_completed_at = models.DateTimeField(null=True, blank=True)
+
+    @property
+    def full_transcript(self):
+        """Backward compatibility - returns clean transcript if available, else raw"""
+        return self.clean_transcript or self.raw_transcript
     
     class Meta:
         db_table = 'huddle_meeting_summary'

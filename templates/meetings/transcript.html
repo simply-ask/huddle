@@ -23,6 +23,11 @@
                     <i class="fas fa-clock"></i>
                     Processing {{ processing_status.processed_recordings }}/{{ processing_status.total_recordings }}
                 </div>
+            {% elif not processing_status.ai_processing_complete %}
+                <div class="status status-pending">
+                    <i class="fas fa-brain fa-spin"></i>
+                    AI Processing
+                </div>
             {% else %}
                 <div class="status status-active">
                     <i class="fas fa-check-circle"></i>
@@ -50,33 +55,148 @@
         </div>
     </div>
 
-    <!-- Transcript -->
-    <div class="card">
-        {% for speaker_group in grouped_segments %}
-            <div style="{% if not forloop.last %}border-bottom: 1px solid #f0f0f0; padding-bottom: 20px; margin-bottom: 20px;{% endif %}">
-                <div class="flex gap-10 mb-16" style="align-items: baseline;">
-                    <div class="status" style="background: #f5f5f5; color: #000;">
-                        <i class="fas fa-user" style="font-size: 10px;"></i>
-                        {{ speaker_group.speaker }}
-                    </div>
-                    <div class="text-muted text-small">{{ speaker_group.segments|length }} segment{{ speaker_group.segments|length|pluralize }}</div>
+    {% if has_ai_processed %}
+        <!-- AI-Processed Meeting Minutes -->
+        <div class="card">
+            <div class="flex gap-10 mb-20" style="align-items: center;">
+                <i class="fas fa-brain" style="color: #007bff;"></i>
+                <h2 style="font-size: 18px; font-weight: 600; margin: 0;">Meeting Minutes</h2>
+                <div class="status status-active" style="margin-left: auto;">
+                    <i class="fas fa-sparkles"></i>
+                    AI Processed
                 </div>
-                
-                {% for segment in speaker_group.segments %}
-                    <div style="margin-bottom: 16px; padding-left: 12px; border-left: 2px solid #f0f0f0;">
-                        <div class="text-muted text-small" style="margin-bottom: 6px;">
-                            <i class="fas fa-clock" style="font-size: 10px; opacity: 0.5;"></i>
-                            {{ segment.start_time|floatformat:1 }}s
-                            {% if segment.recording_service %}
-                                • {{ segment.recording_service|title }}
-                            {% endif %}
-                        </div>
-                        <div style="line-height: 1.6;">{{ segment.text }}</div>
-                    </div>
-                {% endfor %}
             </div>
-        {% endfor %}
-    </div>
+
+            <!-- Executive Summary -->
+            {% if summary.executive_summary %}
+                <div style="margin-bottom: 32px;">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #495057;">
+                        <i class="fas fa-file-alt"></i>
+                        Executive Summary
+                    </h3>
+                    <div style="line-height: 1.7; padding: 16px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                        {{ summary.executive_summary }}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Key Points -->
+            {% if summary.key_points %}
+                <div style="margin-bottom: 32px;">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #495057;">
+                        <i class="fas fa-lightbulb"></i>
+                        Key Discussion Points
+                    </h3>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.7;">
+                        {% for point in summary.key_points %}
+                            <li style="margin-bottom: 8px;">{{ point }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <!-- Action Items -->
+            {% if summary.action_items %}
+                <div style="margin-bottom: 32px;">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #495057;">
+                        <i class="fas fa-tasks"></i>
+                        Action Items
+                    </h3>
+                    <div style="display: grid; gap: 12px;">
+                        {% for item in summary.action_items %}
+                            <div style="padding: 16px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                                <div style="font-weight: 500; margin-bottom: 4px;">{{ item.task }}</div>
+                                <div class="text-muted text-small">
+                                    {% if item.owner and item.owner != "TBD" %}
+                                        <i class="fas fa-user"></i> {{ item.owner }}
+                                    {% endif %}
+                                    {% if item.due_date and item.due_date != "TBD" %}
+                                        • <i class="fas fa-calendar"></i> {{ item.due_date }}
+                                    {% endif %}
+                                    {% if item.priority %}
+                                        • <i class="fas fa-flag"></i> {{ item.priority|title }}
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Decisions Made -->
+            {% if summary.decisions_made %}
+                <div style="margin-bottom: 32px;">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #495057;">
+                        <i class="fas fa-check-circle"></i>
+                        Decisions Made
+                    </h3>
+                    <ul style="margin: 0; padding-left: 20px; line-height: 1.7;">
+                        {% for decision in summary.decisions_made %}
+                            <li style="margin-bottom: 8px; padding: 8px; background: #d1e7dd; border-radius: 4px; list-style: none; margin-left: -20px; padding-left: 20px;">
+                                <i class="fas fa-check" style="color: #198754; margin-right: 8px;"></i>
+                                {{ decision }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <!-- Clean Transcript Toggle -->
+            <div style="border-top: 1px solid #dee2e6; padding-top: 20px;">
+                <button onclick="toggleTranscript()" class="btn-secondary" style="margin-bottom: 20px;">
+                    <i class="fas fa-eye"></i>
+                    <span id="transcript-toggle-text">Show Full Transcript</span>
+                </button>
+
+                <div id="full-transcript" style="display: none;">
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #495057;">
+                        <i class="fas fa-file-text"></i>
+                        Full Transcript
+                    </h3>
+                    <div style="line-height: 1.7; white-space: pre-line; padding: 20px; background: #f8f9fa; border-radius: 8px; max-height: 400px; overflow-y: auto;">{{ summary.clean_transcript }}</div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <!-- Raw Transcript (Fallback) -->
+        <div class="card">
+            <div class="flex gap-10 mb-20" style="align-items: center;">
+                <i class="fas fa-file-text"></i>
+                <h2 style="font-size: 18px; font-weight: 600; margin: 0;">Transcript</h2>
+                {% if not processing_status.ai_processing_complete %}
+                    <div class="status status-pending" style="margin-left: auto;">
+                        <i class="fas fa-brain fa-spin"></i>
+                        Processing...
+                    </div>
+                {% endif %}
+            </div>
+
+            {% for speaker_group in grouped_segments %}
+                <div style="{% if not forloop.last %}border-bottom: 1px solid #f0f0f0; padding-bottom: 20px; margin-bottom: 20px;{% endif %}">
+                    <div class="flex gap-10 mb-16" style="align-items: baseline;">
+                        <div class="status" style="background: #f5f5f5; color: #000;">
+                            <i class="fas fa-user" style="font-size: 10px;"></i>
+                            {{ speaker_group.speaker }}
+                        </div>
+                        <div class="text-muted text-small">{{ speaker_group.segments|length }} segment{{ speaker_group.segments|length|pluralize }}</div>
+                    </div>
+
+                    {% for segment in speaker_group.segments %}
+                        <div style="margin-bottom: 16px; padding-left: 12px; border-left: 2px solid #f0f0f0;">
+                            <div class="text-muted text-small" style="margin-bottom: 6px;">
+                                <i class="fas fa-clock" style="font-size: 10px; opacity: 0.5;"></i>
+                                {{ segment.start_time|floatformat:1 }}s
+                                {% if segment.recording_service %}
+                                    • {{ segment.recording_service|title }}
+                                {% endif %}
+                            </div>
+                            <div style="line-height: 1.6;">{{ segment.text }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% else %}
     <!-- No transcript state -->
     <div class="card" style="text-align: center; padding: 60px 20px;">
@@ -95,36 +215,29 @@
     </div>
 {% endif %}
 
-<!-- AI Summary if available -->
-{% if has_summary and summary.summary %}
-    <div class="card" style="margin-top: 40px; background: #f8f9fa;">
-        <div class="flex gap-10 mb-16">
-            <i class="fas fa-brain"></i>
-            <h3 style="font-size: 18px; font-weight: 500;">AI Summary</h3>
-        </div>
-        
-        <div style="line-height: 1.6; margin-bottom: 20px;">{{ summary.summary }}</div>
-        
-        {% if summary.key_points %}
-            <div>
-                <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">Key Points</h4>
-                <ul style="line-height: 1.6; color: #666;">
-                    {% for point in summary.key_points %}
-                        <li style="margin-bottom: 8px;">{{ point }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
-    </div>
-{% endif %}
 
 <script>
     // Auto-refresh if processing is incomplete
-    {% if processing_status.processed_recordings < processing_status.total_recordings %}
+    {% if processing_status.processed_recordings < processing_status.total_recordings or not processing_status.ai_processing_complete %}
         setTimeout(() => {
             window.location.reload();
         }, 15000); // Refresh every 15 seconds
     {% endif %}
+
+    // Toggle transcript visibility
+    function toggleTranscript() {
+        const transcript = document.getElementById('full-transcript');
+        const toggleText = document.getElementById('transcript-toggle-text');
+        const isVisible = transcript.style.display !== 'none';
+
+        if (isVisible) {
+            transcript.style.display = 'none';
+            toggleText.textContent = 'Show Full Transcript';
+        } else {
+            transcript.style.display = 'block';
+            toggleText.textContent = 'Hide Full Transcript';
+        }
+    }
 </script>
 
 {% endblock %}

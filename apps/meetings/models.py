@@ -18,6 +18,19 @@ class Meeting(TimeStampedModel):
     # Actual meeting times
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
+
+    # Meeting status choices
+    class Status(models.TextChoices):
+        SCHEDULED = 'scheduled', 'Scheduled'
+        ACTIVE = 'active', 'In Progress'
+        COMPLETED = 'completed', 'Completed'
+
+    status = models.CharField(
+        max_length=10,
+        choices=Status.choices,
+        default=Status.SCHEDULED,
+        help_text="Current meeting status"
+    )
     
     # Speaker management
     expected_speakers = models.JSONField(
@@ -35,6 +48,41 @@ class Meeting(TimeStampedModel):
     
     def __str__(self):
         return f"Meeting {self.meeting_id} - {self.title or 'Untitled'}"
+
+    @property
+    def is_active(self):
+        """Check if meeting is currently active"""
+        return self.status == self.Status.ACTIVE
+
+    @property
+    def is_completed(self):
+        """Check if meeting is completed"""
+        return self.status == self.Status.COMPLETED
+
+    @property
+    def has_recordings(self):
+        """Check if meeting has any recordings"""
+        return self.recordings.exists()
+
+    @property
+    def has_transcripts(self):
+        """Check if meeting has processed transcripts"""
+        return self.recordings.filter(is_processed=True).exists()
+
+    def start_meeting(self):
+        """Start the meeting - called when first recording begins"""
+        from django.utils import timezone
+        if not self.started_at:
+            self.started_at = timezone.now()
+        self.status = self.Status.ACTIVE
+        self.save()
+
+    def end_meeting(self):
+        """End the meeting - called when host clicks 'End Meeting'"""
+        from django.utils import timezone
+        self.ended_at = timezone.now()
+        self.status = self.Status.COMPLETED
+        self.save()
     
     def get_new_speakers(self):
         """Get list of speakers who need voice setup"""

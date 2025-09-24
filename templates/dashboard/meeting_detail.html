@@ -174,11 +174,16 @@
                     Back
                 </a>
                 
-                {% if meeting.transcriptsegment_set.exists %}
-                    <a href="{% url 'meeting_transcript' meeting.meeting_id %}" class="btn btn-secondary">
+                {% if meeting.is_completed and meeting.has_transcripts %}
+                    <a href="{% url 'meeting_transcript' meeting.meeting_id %}" class="btn btn-primary">
                         <i class="fas fa-file-text"></i>
-                        View Transcript
+                        View Transcript & Minutes
                     </a>
+                {% elif meeting.is_completed %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-clock"></i>
+                        Meeting completed. Transcript processing...
+                    </div>
                 {% endif %}
                 
                 <button onclick="toggleMeetingStatus()" class="btn {% if meeting.is_active %}btn-secondary{% else %}btn-primary{% endif %}">

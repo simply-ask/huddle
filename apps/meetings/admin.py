@@ -8,8 +8,8 @@ from .email_utils import send_voice_setup_invitation, send_meeting_invitation
 
 @admin.register(Meeting)
 class MeetingAdmin(admin.ModelAdmin):
-    list_display = ['meeting_id', 'title', 'host', 'expected_count', 'known_count', 'is_active', 'created_at']
-    list_filter = ['is_active', 'created_at']
+    list_display = ['meeting_id', 'title', 'host', 'expected_count', 'known_count', 'status', 'created_at']
+    list_filter = ['status', 'created_at']
     search_fields = ['meeting_id', 'title', 'host__username']
     readonly_fields = ['meeting_id', 'created_at', 'updated_at']
     filter_horizontal = ['known_speakers']
@@ -19,7 +19,7 @@ class MeetingAdmin(admin.ModelAdmin):
             'fields': ('meeting_id', 'title')
         }),
         ('Settings', {
-            'fields': ('host', 'is_active', 'organization_name')
+            'fields': ('host', 'status', 'organization_name')
         }),
         ('Speakers', {
             'fields': ('expected_speakers', 'known_speakers'),

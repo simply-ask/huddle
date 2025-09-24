@@ -160,6 +160,10 @@ class AudioProcessor:
             
             audio_recording.save()
             logger.info(f"Deepgram transcription completed for recording {audio_recording.id} - {segments_created} segments created")
+
+            # Trigger AI processing after successful transcription
+            self._trigger_ai_processing_if_ready(audio_recording.meeting)
+
             return True
             
         except Exception as e:
@@ -239,3 +243,23 @@ class AudioProcessor:
             
         except Exception as e:
             logger.error(f"Error generating meeting summary: {str(e)}")
+    def _trigger_ai_processing_if_ready(self, meeting):
+        """Trigger AI processing if all recordings for meeting are processed"""
+        try:
+            total_recordings = meeting.recordings.count()
+            processed_recordings = meeting.recordings.filter(is_processed=True).count()
+
+            logger.info(f"Meeting {meeting.meeting_id}: {processed_recordings}/{total_recordings} recordings processed")
+
+            # If all recordings are processed, trigger AI analysis
+            if processed_recordings > 0 and processed_recordings == total_recordings:
+                logger.info(f"All recordings processed for meeting {meeting.meeting_id}, triggering AI analysis")
+
+                # Import here to avoid circular imports
+                from .tasks import process_meeting_ai_analysis
+
+                # Queue AI processing
+                process_meeting_ai_analysis.delay(meeting.meeting_id)
+
+        except Exception as e:
+            logger.error(f"Error checking AI processing readiness: {e}")

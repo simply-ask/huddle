@@ -15,9 +15,11 @@ def meeting_transcript_view(request, meeting_id):
     try:
         summary = meeting.summary
         has_summary = True
+        has_ai_processed = summary.is_ai_processed
     except MeetingSummary.DoesNotExist:
         summary = None
         has_summary = False
+        has_ai_processed = False
     
     # Get all transcript segments from all recordings
     all_segments = []
@@ -64,12 +66,14 @@ def meeting_transcript_view(request, meeting_id):
         'meeting': meeting,
         'summary': summary,
         'has_summary': has_summary,
+        'has_ai_processed': has_ai_processed,
         'all_segments': all_segments,
         'grouped_segments': grouped_segments,
         'total_segments': len(all_segments),
         'processing_status': {
             'total_recordings': meeting.recordings.count(),
             'processed_recordings': meeting.recordings.filter(is_processed=True).count(),
+            'ai_processing_complete': has_ai_processed,
         }
     }
     
