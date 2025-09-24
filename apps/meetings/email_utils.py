@@ -222,5 +222,66 @@ def send_meeting_reminder(meeting, email_list, hours_before=2):
                 'success': False,
                 'message': f"Failed to send reminder to {email}: {str(e)}"
             })
-    
+
     return results
+
+
+def send_meeting_complete_notification(meeting, email):
+    """Send magic links to participant after meeting is complete"""
+    debug_email_config()
+
+    logger.info(f"=== SENDING MEETING COMPLETE NOTIFICATION ===")
+    logger.info(f"Meeting: {meeting.meeting_id} - {meeting.title}")
+    logger.info(f"Recipient: {email}")
+
+    try:
+        # Get access token for this participant
+        from .models import MeetingAccessToken
+        try:
+            access_token = MeetingAccessToken.objects.get(
+                meeting=meeting,
+                email=email
+            )
+        except MeetingAccessToken.DoesNotExist:
+            logger.error(f"No access token found for {email} in meeting {meeting.meeting_id}")
+            return False, "Access token not found"
+
+        if not access_token.is_valid():
+            logger.error(f"Access token for {email} is not valid")
+            return False, "Access token invalid"
+
+        # Prepare context for email template
+        context = {
+            'meeting': meeting,
+            'recipient_email': email,
+            'recipient_name': Meeting.extract_name_from_email(email),
+            'host_name': meeting.host.get_full_name() if meeting.host else 'Meeting Host',
+            'minutes_link': access_token.get_magic_link('minutes'),
+            'transcript_link': access_token.get_magic_link('transcript'),
+            'actions_link': access_token.get_magic_link('actions'),
+            'site_name': 'Huddle',
+        }
+
+        # Render email templates
+        subject = f"Meeting Complete: {meeting.title or 'Team Meeting'}"
+        html_message = render_to_string('emails/meeting_complete_notification.html', context)
+
+        # Send email
+        send_mail(
+            subject=subject,
+            message="",  # Text version not needed for this simple notification
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            html_message=html_message,
+            fail_silently=False
+        )
+
+        logger.info(f"✅ Meeting completion notification sent to {email}")
+        print(f"✅ NOTIFICATION SENT: {email}")
+
+        return True, "Notification sent successfully"
+
+    except Exception as e:
+        logger.error(f"Failed to send meeting completion notification to {email}: {str(e)}")
+        print(f"❌ NOTIFICATION FAILED: {email} - {str(e)}")
+        return False, f"Error sending notification: {str(e)}"

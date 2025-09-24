@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meeting Complete - {{ meeting.title|default:"Meeting" }}</title>
+    <style>
+        /* Simplified email styles */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        .header {
+            background: #0B2033;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 300;
+            color: #ffffff;
+            margin: 0;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .greeting {
+            font-size: 18px;
+            color: #2c3e50;
+            margin: 0 0 20px 0;
+        }
+
+        .message {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #4a5568;
+            margin: 0 0 30px 0;
+        }
+
+        .meeting-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .meeting-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0 0 8px 0;
+        }
+
+        .meeting-meta {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .links-section {
+            margin: 30px 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0 0 16px 0;
+        }
+
+        .link-item {
+            display: block;
+            padding: 16px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin: 12px 0;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .link-item:hover {
+            background: #f7fafc;
+            border-color: #cbd5e0;
+        }
+
+        .link-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d3748;
+            margin: 0 0 4px 0;
+        }
+
+        .link-description {
+            font-size: 13px;
+            color: #718096;
+            margin: 0;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-text {
+            font-size: 13px;
+            color: #718096;
+            margin: 0;
+        }
+
+        /* Mobile responsive */
+        @media screen and (max-width: 600px) {
+            .content, .header, .footer {
+                padding: 20px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="logo">huddle</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <h2 class="greeting">Hi {{ recipient_name }},</h2>
+
+            <p class="message">
+                The meeting you attended has been completed and the minutes are now available.
+                Click the links below to access your meeting results - no login required.
+            </p>
+
+            <!-- Meeting Info -->
+            <div class="meeting-info">
+                <div class="meeting-title">{{ meeting.title|default:"Team Meeting" }}</div>
+                <div class="meeting-meta">
+                    Meeting {{ meeting.meeting_id }} • {{ meeting.created_at|date:"F j, Y" }}
+                    {% if host_name %} • Hosted by {{ host_name }}{% endif %}
+                </div>
+            </div>
+
+            <!-- Access Links -->
+            <div class="links-section">
+                <h3 class="section-title">Your Meeting Results</h3>
+
+                <a href="{{ minutes_link }}" class="link-item">
+                    <div class="link-title">📝 Meeting Minutes</div>
+                    <div class="link-description">AI-generated executive summary, key points, and decisions made</div>
+                </a>
+
+                <a href="{{ actions_link }}" class="link-item">
+                    <div class="link-title">📋 Your Action Items</div>
+                    <div class="link-description">Tasks assigned to you with due dates and priorities</div>
+                </a>
+
+                <a href="{{ transcript_link }}" class="link-item">
+                    <div class="link-title">📄 Full Transcript</div>
+                    <div class="link-description">Complete meeting transcript with speaker identification</div>
+                </a>
+            </div>
+
+            <p class="message" style="font-size: 14px; color: #718096;">
+                <strong>Note:</strong> These secure links are personalized for you and will remain active for future reference.
+                You can bookmark them to access your meeting results anytime.
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p class="footer-text">
+                © huddle - Making meetings more productive<br>
+                Questions? Contact {{ host_name }} or reply to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
