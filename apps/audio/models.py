@@ -46,6 +46,15 @@ class TranscriptionSegment(TimeStampedModel):
     speaker_id = models.CharField(max_length=50, null=True, blank=True)
     speaker_name = models.CharField(max_length=100, null=True, blank=True, help_text="Identified speaker name")
     words = models.JSONField(default=list, blank=True, help_text="Word-level timing data")
+
+    # Agenda context for this segment
+    agenda_item = models.ForeignKey(
+        'meetings.AgendaItem',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        help_text="Agenda item that was active when this segment was recorded"
+    )
     
     class Meta:
         db_table = 'huddle_transcription_segment'

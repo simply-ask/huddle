@@ -34,13 +34,23 @@ class Meeting(TimeStampedModel):
     
     # Speaker management
     expected_speakers = models.JSONField(
-        default=list, 
+        default=list,
         help_text="List of expected speaker emails"
     )
     known_speakers = models.ManyToManyField(
-        SpeakerProfile, 
-        blank=True, 
+        SpeakerProfile,
+        blank=True,
         help_text="Speakers with existing voice profiles"
+    )
+
+    # Current agenda item being discussed
+    current_agenda_item = models.ForeignKey(
+        'AgendaItem',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='active_for_meeting',
+        help_text="Currently active agenda item during meeting"
     )
     
     class Meta:

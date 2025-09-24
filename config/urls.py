@@ -137,6 +137,8 @@ urlpatterns = [
     path('api/meetings/<str:meeting_id>/agenda/', agenda_views.agenda_api, name='agenda_api'),
     path('api/meetings/<str:meeting_id>/agenda/<int:item_id>/', agenda_views.agenda_delete_api, name='agenda_delete_api'),
     path('api/meetings/<str:meeting_id>/agenda/reorder/', agenda_views.agenda_reorder_api, name='agenda_reorder_api'),
+    path('api/meetings/<str:meeting_id>/set-current-agenda/', agenda_views.set_current_agenda_api, name='set_current_agenda_api'),
+    path('api/meetings/<str:meeting_id>/current-agenda/', agenda_views.current_agenda_api, name='current_agenda_api'),
     
     # Meeting Room (Public)
     path('meet/<str:meeting_id>/', meeting_views.join_meeting, name='join_meeting'),

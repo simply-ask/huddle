@@ -150,7 +150,8 @@ class AudioProcessor:
                                 text=sentence.text,
                                 confidence=None,
                                 speaker_id=speaker_id,
-                                speaker_name=self._identify_speaker(audio_recording.meeting, speaker_id)
+                                speaker_name=self._identify_speaker(audio_recording.meeting, speaker_id),
+                                agenda_item=audio_recording.meeting.current_agenda_item
                             )
                             
                             segments_created += 1

@@ -25,7 +25,8 @@ def agenda_api(request, meeting_id):
                     'title': item.title,
                     'assigned_participant': item.assigned_participant,
                     'participant_name': item.participant_name,
-                    'order': item.order
+                    'order': item.order,
+                    'is_current': meeting.current_agenda_item_id == item.id
                 }
                 for item in agenda_items
             ]
@@ -105,3 +106,55 @@ def agenda_reorder_api(request, meeting_id):
         return JsonResponse({'success': False, 'error': 'Invalid data format'})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def set_current_agenda_api(request, meeting_id):
+    """Set current agenda item for meeting"""
+    meeting = get_object_or_404(Meeting, meeting_id=meeting_id, host=request.user)
+
+    try:
+        data = json.loads(request.body)
+        agenda_item_id = data.get('agenda_item_id')
+
+        if agenda_item_id:
+            # Validate that agenda item belongs to this meeting
+            agenda_item = get_object_or_404(AgendaItem, id=agenda_item_id, meeting=meeting)
+            meeting.current_agenda_item = agenda_item
+        else:
+            # Clear current agenda item
+            meeting.current_agenda_item = None
+
+        meeting.save()
+
+        return JsonResponse({
+            'success': True,
+            'current_agenda': {
+                'id': meeting.current_agenda_item.id if meeting.current_agenda_item else None,
+                'title': meeting.current_agenda_item.title if meeting.current_agenda_item else None
+            }
+        })
+
+    except (json.JSONDecodeError, KeyError) as e:
+        return JsonResponse({'success': False, 'error': 'Invalid data format'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+
+@login_required
+@require_http_methods(["GET"])
+def current_agenda_api(request, meeting_id):
+    """Get current agenda item for meeting"""
+    meeting = get_object_or_404(Meeting, meeting_id=meeting_id)
+
+    # Allow both host and participants to view current agenda
+    return JsonResponse({
+        'success': True,
+        'current_agenda': {
+            'id': meeting.current_agenda_item.id if meeting.current_agenda_item else None,
+            'title': meeting.current_agenda_item.title if meeting.current_agenda_item else None,
+            'participant_name': meeting.current_agenda_item.participant_name if meeting.current_agenda_item else None
+        } if meeting.current_agenda_item else None
+    })
