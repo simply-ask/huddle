@@ -109,30 +109,42 @@ Make it professional and readable while preserving all important information."""
     def _analyze_meeting(self, clean_transcript: str, meeting) -> Dict:
         """Analyze the meeting and extract structured information"""
 
+        # Get agenda items with assigned participants
+        agenda_context = self._build_agenda_context(meeting)
+
         meeting_context = f"""
 Meeting Title: {meeting.title or 'Untitled Meeting'}
 Meeting Date: {meeting.created_at.strftime('%Y-%m-%d')}
 Host: {meeting.host.get_full_name() if meeting.host else 'Unknown'}
 Duration: {self._estimate_duration(meeting)}
+
+Agenda Items:
+{agenda_context}
 """
 
         system_prompt = """You are an AI meeting assistant specialized in analyzing meeting transcripts and generating professional meeting minutes.
 
 Your task is to analyze the transcript and extract:
 1. Executive Summary (2-3 sentences)
-2. Key Discussion Points (main topics covered)
-3. Action Items (specific tasks with owners if mentioned)
+2. Key Discussion Points (organized by agenda items when possible)
+3. Action Items (specific tasks with smart owner assignment)
 4. Decisions Made (concrete decisions reached)
-5. Participant Analysis (speaking patterns)
+5. Participant Analysis (general engagement patterns)
+
+IMPORTANT - Action Item Assignment Logic:
+- If discussion happens during a specific agenda item, assign related action items to that agenda item's owner
+- If no agenda context, look for explicit mentions in transcript ("John will handle...", "Sarah, can you...")
+- If no clear owner, leave as "TBD" for admin review
+- Consider the context and relevance when making assignments
 
 Return your analysis in valid JSON format with these exact keys:
 - executive_summary (string)
-- key_points (array of strings)
-- action_items (array of objects with: task, owner, due_date, priority)
+- key_points (array of strings, organize by agenda topics when clear)
+- action_items (array of objects with: task, owner, due_date, priority, agenda_item)
 - decisions_made (array of strings)
-- participants_summary (object with speaker stats)
+- participants_summary (object with general stats, no speaker identification needed)
 
-Be specific and actionable. If action items don't have explicit owners or dates, mark them as "TBD"."""
+Be specific and actionable. Use agenda context to intelligently assign action items."""
 
         user_prompt = f"""Meeting Context:
 {meeting_context}
